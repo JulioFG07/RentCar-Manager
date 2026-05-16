@@ -1,0 +1,130 @@
+/* 1. Variables de Entorno (Paleta de colores moderna y tipografía) */
+:root {
+    --primary-gradient: linear-gradient(135deg, #2563eb, #1d4ed8);
+    --success-gradient: linear-gradient(135deg, #10b981, #059669);
+    --dark-navy: #0f172a;
+    --slate-gray: #64748b;
+    --light-bg: #f8fafc;
+    --border-color: #e2e8f0;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+/* 2. Estilos Globales y Fondos */
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--light-bg) !important;
+    color: var(--dark-navy);
+}
+
+/* Fondo decorativo sutil para las pantallas de Auth (Login/Register) */
+body.vh-100 {
+    background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.03) 0%, transparent 40%),
+                var(--light-bg) !important;
+}
+
+/* 3. Tarjetas Modernas (Cards) */
+.card {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-md) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 4. Inputs Flotantes y Enfoque Estilizado */
+.form-control {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.form-control:focus {
+    color: var(--dark-navy);
+    background-color: #fff;
+    border-color: #3b82f6;
+    outline: 0;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Ajustes finos para las etiquetas flotantes de Bootstrap */
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: #2563eb;
+    transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+}
+
+/* 5. Botones Personalizados con Gradientes */
+.btn {
+    border-radius: var(--radius-md) !important;
+    font-weight: 600;
+    padding: 0.6rem 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--primary-gradient) !important;
+    border: none !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(1px) !important;
+}
+
+.btn-success {
+    background: var(--success-gradient) !important;
+    border: none !important;
+}
+
+.btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* 6. Alertas Animadas y Flotantes */
+.alert {
+    border-radius: var(--radius-md) !important;
+    border: none !important;
+    box-shadow: var(--shadow-sm);
+    font-size: 0.9rem;
+    animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 7. Clases de Utilidad Requeridas (Manejo de Carga y Vacío) */
+/* Spinner centrado transparente */
+.spinner-border-sm {
+    margin-right: 0.5rem;
+}
+
+/* Estado de deshabilitado suave para cuando estemos enviando datos */
+.btn:disabled {
+    opacity: 0.8 !important;
+    cursor: not-allowed;
+}
+
+/* Estilo para los iconos de la marca */
+.bi-car-front-fill, .bi-person-plus-fill {
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+}
