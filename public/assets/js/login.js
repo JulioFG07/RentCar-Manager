@@ -1,37 +1,49 @@
-import { hideAlert, showAlert, setButtonLoading, loginUser, observeAuth, getFirebaseErrorMessage } from "./auth.js"
+import { loginUser, redirectIfAuthenticated } from "./auth.js"
+import { showAlert, hideAlert, showButtonLoader, hideButtonLoader } from "./ui.js"
+import { isEmpty, isValidEmail } from "./validators.js"
 
-const form = document.getElementById('loginForm')
-const emailInput = document.getElementById('loginEmail')
+const form          = document.getElementById('loginForm')
+const emailInput    = document.getElementById('loginEmail')
 const passwordInput = document.getElementById('loginPassword')
-const loginBtn = document.getElementById('loginBtn')
+const loginBtn      = document.getElementById('loginBtn')
 
-observeAuth((user) => {
-    if (user) {
-        window.location.href = './dashboard.html'
-    }
-})
+redirectIfAuthenticated()
 
 form?.addEventListener('submit', async (e) => {
     e.preventDefault()
 
     hideAlert('loginAlert')
 
-    const email = emailInput.value.trim()
+    const email    = emailInput.value.trim()
     const password = passwordInput.value.trim()
 
-    if (!email || !password) {
+    if (isEmpty(email) || isEmpty(password)) {
         showAlert('loginAlert', 'Por favor, completa todos los campos')
         return
     }
 
+    if (!isValidEmail(email)) {
+        showAlert('loginAlert', 'Ingresa un correo electrónico válido')
+        return
+    }
+
     try {
-        setButtonLoading(loginBtn, true, '<i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión', 'Iniciando Sesión')
-        await loginUser({ email, password })
+        showButtonLoader(loginBtn, 'Iniciando sesión...')
+
+        const result = await loginUser(email, password)
+
+        if (!result.success) {
+            showAlert('loginAlert', result.error)
+            return
+        }
+
         window.location.href = './dashboard.html'
+
     } catch (error) {
-        showAlert('loginAlert', getFirebaseErrorMessage(error))
+        showAlert('loginAlert', 'Ocurrió un error inesperado')
+        console.error(error)
     } finally {
-        setButtonLoading(loginBtn, false, '<i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión')
+        hideButtonLoader(loginBtn)
     }
 })
 
