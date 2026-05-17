@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RentCar Manager | Crear cuenta</title>
+  <title>RentCar Manager | Registro Administrador</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -11,7 +11,7 @@
 </head>
 <body class="vh-100">
 
-  <!-- NAVBAR -->
+  <!--  NAVBAR  -->
   <nav class="navbar bg-white shadow-sm py-3">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="./index.html">
@@ -21,7 +21,7 @@
     </div>
   </nav>
 
-  <!-- FORMULARIO DE REGISTRO -->
+  <!-- FORMULARIO DE REGISTRO DE ADMIN -->
   <main class="d-flex align-items-center justify-content-center py-5" style="min-height: calc(100vh - 80px);">
     <div class="container">
       <div class="row justify-content-center">
@@ -34,31 +34,38 @@
               <div class="text-center mb-4">
                 <div
                   class="d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
-                  style="width: 70px; height: 70px; background: var(--success-gradient);"
+                  style="width: 70px; height: 70px; background: var(--primary-gradient);"
                 >
-                  <i class="bi bi-person-plus-fill text-white" style="font-size: 2rem;"></i>
+                  <i class="bi bi-shield-lock-fill text-white" style="font-size: 2rem;"></i>
                 </div>
-                <h1 class="h3 fw-bold mb-1">Crear Cuenta</h1>
-                <p class="text-secondary mb-0">Únete y empieza a rentar tu próximo auto</p>
+                <h1 class="h3 fw-bold mb-1">Registro de Administrador</h1>
+                <p class="text-secondary mb-0">Acceso restringido al personal autorizado</p>
               </div>
 
-              <!-- Alertas -->
-              <div id="registerAlert"   class="alert alert-danger  d-none" role="alert"></div>
-              <div id="registerSuccess" class="alert alert-success d-none" role="alert"></div>
+              <!-- Aviso -->
+              <div class="alert alert-warning border-0 small mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                Esta página es solo para crear cuentas con permisos administrativos.
+                Necesitas la clave de acceso del sistema.
+              </div>
+
+              <!-- Alertas dinámicas -->
+              <div id="adminAlert"   class="alert alert-danger  d-none" role="alert"></div>
+              <div id="adminSuccess" class="alert alert-success d-none" role="alert"></div>
 
               <!-- Formulario -->
-              <form id="registerForm" novalidate>
+              <form id="adminRegisterForm" novalidate>
 
                 <div class="form-floating mb-3">
                   <input
                     type="text"
                     class="form-control"
-                    id="name"
-                    placeholder="Tu nombre completo"
+                    id="adminName"
+                    placeholder="Nombre completo"
                     required
                     autocomplete="name"
                   >
-                  <label for="name">
+                  <label for="adminName">
                     <i class="bi bi-person me-1"></i>Nombre completo
                   </label>
                 </div>
@@ -67,12 +74,12 @@
                   <input
                     type="email"
                     class="form-control"
-                    id="email"
+                    id="adminEmail"
                     placeholder="correo@ejemplo.com"
                     required
                     autocomplete="email"
                   >
-                  <label for="email">
+                  <label for="adminEmail">
                     <i class="bi bi-envelope me-1"></i>Correo electrónico
                   </label>
                 </div>
@@ -81,13 +88,27 @@
                   <input
                     type="password"
                     class="form-control"
-                    id="password"
+                    id="adminPassword"
                     placeholder="Mínimo 6 caracteres"
                     required
                     autocomplete="new-password"
                   >
-                  <label for="password">
+                  <label for="adminPassword">
                     <i class="bi bi-lock me-1"></i>Contraseña (mínimo 6 caracteres)
+                  </label>
+                </div>
+
+                <div class="form-floating mb-3">
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="adminConfirmPassword"
+                    placeholder="Repite tu contraseña"
+                    required
+                    autocomplete="new-password"
+                  >
+                  <label for="adminConfirmPassword">
+                    <i class="bi bi-lock-fill me-1"></i>Confirmar contraseña
                   </label>
                 </div>
 
@@ -95,26 +116,24 @@
                   <input
                     type="password"
                     class="form-control"
-                    id="confirmPassword"
-                    placeholder="Repite tu contraseña"
+                    id="adminSecretKey"
+                    placeholder="Clave de acceso"
                     required
-                    autocomplete="new-password"
                   >
-                  <label for="confirmPassword">
-                    <i class="bi bi-lock-fill me-1"></i>Confirmar contraseña
+                  <label for="adminSecretKey">
+                    <i class="bi bi-key-fill me-1"></i>Clave de acceso del sistema
                   </label>
                 </div>
 
                 <div class="d-grid mb-3">
-                  <button type="submit" id="registerBtn" class="btn btn-success btn-lg">
-                    <i class="bi bi-person-check me-2"></i>Registrarse
+                  <button type="submit" id="adminRegisterBtn" class="btn btn-primary btn-lg">
+                    <i class="bi bi-shield-check me-2"></i>Registrar Administrador
                   </button>
                 </div>
 
                 <p class="text-center text-secondary small mb-0">
-                  ¿Ya tienes una cuenta?
                   <a href="./login.html" class="text-primary text-decoration-none fw-semibold">
-                    Inicia sesión aquí
+                    <i class="bi bi-arrow-left me-1"></i>Volver al inicio de sesión
                   </a>
                 </p>
 
@@ -129,6 +148,6 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="module" src="./assets/js/register.js"></script>
+  <script type="module" src="./assets/js/admin-register.js"></script>
 </body>
 </html>
