@@ -1,134 +1,166 @@
+// Firebase Authentication
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+    updateProfile
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
-import {
-  doc,
-  setDoc,
-  getDoc,
-  updateDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+import { auth } from "./firebase.js";
 
-import { auth, db } from "./firebase.js";
+/* Registrar usuario */
+export async function registerUser(userData) {
 
-export function showAlert(elementId, message) {
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  el.textContent = message;
-  el.classList.remove("d-none");
+    try {
+
+        const {
+            fullName,
+            email,
+            password
+        } = userData;
+
+        const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
+
+        // Actualizar nombre usuario
+        await updateProfile(userCredential.user, {
+            displayName: fullName
+        });
+
+        return {
+            success: true,
+            user: userCredential.user
+        };
+
+    } catch (error) {
+
+        console.error("Register Error:", error);
+
+        return {
+            success: false,
+            error: getFirebaseAuthError(error.code)
+        };
+    }
 }
 
-export function hideAlert(elementId) {
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  el.classList.add("d-none");
-  el.textContent = "";
+/* Iniciar sesión */
+export async function loginUser(email, password) {
+
+    try {
+
+        const userCredential = await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
+
+        return {
+            success: true,
+            user: userCredential.user
+        };
+
+    } catch (error) {
+
+        console.error("Login Error:", error);
+
+        return {
+            success: false,
+            error: getFirebaseAuthError(error.code)
+        };
+    }
 }
 
-export function setButtonLoading(button, isLoading, text, loadingText = "Procesando...") {
-  if (!button) return;
-  button.disabled = isLoading;
-  button.innerHTML = isLoading
-    ? `<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>${loadingText}`
-    : text;
-}
-
-export async function registerUser({ name, email, password }) {
-  const credential = await createUserWithEmailAndPassword(auth, email, password);
-  const user = credential.user;
-
-  await setDoc(doc(db, "users", user.uid), {
-    uid: user.uid,
-    name,
-    email,
-    role: "user",
-    active: true,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    createdBy: user.uid
-  });
-
-  return user;
-}
-
-export async function registerAdmin({ name, email, password }) {
-  const credential = await createUserWithEmailAndPassword(auth, email, password);
-  const user = credential.user;
-
-  await setDoc(doc(db, "users", user.uid), {
-    uid: user.uid,
-    name,
-    email,
-    role: "admin",
-    active: true,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    createdBy: user.uid
-  });
-
-  return user;
-}
-
-export async function loginUser({ email, password }) {
-  const credential = await signInWithEmailAndPassword(auth, email, password);
-  return credential.user;
-}
-
-export async function getCurrentUserProfile(uid) {
-  const ref = doc(db, "users", uid);
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) return null;
-
-  return snap.data();
-}
-
-export async function updateCurrentUserProfile(uid, data) {
-  const ref = doc(db, "users", uid);
-  await updateDoc(ref, {
-    ...data,
-    updatedAt: serverTimestamp()
-  });
-}
-
-export async function getUserRole(uid) {
-  const profile = await getCurrentUserProfile(uid);
-  return profile?.role || null;
-}
-
-export function observeAuth(callback) {
-  return onAuthStateChanged(auth, callback);
-}
-
+/* Cerrar sesión */
 export async function logoutUser() {
-  await signOut(auth);
+
+    try {
+
+        await signOut(auth);
+
+        return {
+            success: true
+        };
+
+    } catch (error) {
+
+        console.error("Logout Error:", error);
+
+        return {
+            success: false,
+            error: error.message
+        };
+    }
 }
 
-export function getFirebaseErrorMessage(error) {
-  const code = error?.code || "";
+/* Verificar sesión activa */
+export function checkAuth(callback) {
 
-  switch (code) {
-    case "auth/email-already-in-use":
-      return "Este correo ya está registrado.";
-    case "auth/invalid-email":
-      return "El correo electrónico no es válido.";
-    case "auth/weak-password":
-      return "La contraseña debe tener al menos 6 caracteres.";
-    case "auth/invalid-credential":
-      return "Correo o contraseña incorrectos.";
-    case "auth/user-not-found":
-      return "No existe una cuenta con este correo.";
-    case "auth/wrong-password":
-      return "La contraseña es incorrecta.";
-    case "auth/too-many-requests":
-      return "Demasiados intentos. Intenta más tarde.";
-    case "auth/network-request-failed":
-      return "Sin conexión a internet. Verifica tu red.";
-    default:
-      return error?.message || "Ocurrió un error inesperado.";
-  }
+    onAuthStateChanged(auth, (user) => {
+
+        callback(user);
+    });
+}
+
+/* Proteger vistas privadas */
+export function protectRoute() {
+
+    checkAuth((user) => {
+
+        if (!user) {
+
+            window.location.href = "../login.html";
+        }
+    });
+}
+
+/* Redireccionar si ya inició sesión */
+export function redirectIfAuthenticated() {
+
+    checkAuth((user) => {
+
+        if (user) {
+
+            window.location.href = "dashboard.html";
+        }
+    });
+}
+
+/* Obtener usuario actual */
+export function getCurrentUser() {
+
+    return auth.currentUser;
+}
+
+/* Traducir errores Firebase Auth */
+function getFirebaseAuthError(errorCode) {
+
+    const errors = {
+
+        "auth/email-already-in-use":
+            "El correo ya está registrado",
+
+        "auth/invalid-email":
+            "Correo electrónico inválido",
+
+        "auth/weak-password":
+            "La contraseña debe tener al menos 6 caracteres",
+
+        "auth/user-not-found":
+            "Usuario no encontrado",
+
+        "auth/wrong-password":
+            "Contraseña incorrecta",
+
+        "auth/invalid-credential":
+            "Credenciales inválidas",
+
+        "auth/too-many-requests":
+            "Demasiados intentos. Intenta más tarde"
+    };
+
+    return errors[errorCode] || "Ocurrió un error inesperado";
 }
