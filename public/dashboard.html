@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RentCar Manager | Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body>
+
+  <!-- =============================================================
+  ⚠️ ZONA PROTEGIDA — MÓDULO DE AUTH (Sebastián)
+  No eliminar ni modificar los siguientes elementos:
+    - id="loadingState"  → spinner mientras verifica la sesión
+    - id="logoutBtn"     → botón de cerrar sesión
+  Estos ids son requeridos por dashboard.js para funcionar.
+  Cualquier cambio puede romper la verificación de sesión
+  y la redirección por rol.
+  ============================================================= -->
+
+  <div id="loadingState" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="text-secondary mt-3">Verificando sesión...</p>
+  </div>
+
+  <button id="logoutBtn" class="d-none">Cerrar sesión</button>
+
+  <!-- =============================================================
+  ✅ FIN ZONA PROTEGIDA
+  Agregar tu navbar, hero, stats y módulos aquí.
+  Recuerda conservar los ids de arriba y no mover los scripts
+  del final del body.
+  ============================================================= -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="./assets/js/dashboard.js"></script>
+</body>
+</html>
