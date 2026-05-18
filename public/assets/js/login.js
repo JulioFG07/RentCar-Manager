@@ -1,13 +1,21 @@
-import { loginUser, redirectIfAuthenticated } from "./auth.js"
-import { showAlert, hideAlert, showButtonLoader, hideButtonLoader } from "./ui.js"
-import { isEmpty, isValidEmail } from "./validators.js"
+import { loginUser, checkAuth } from './auth.js'
+import { showAlert, hideAlert, showButtonLoader, hideButtonLoader } from './ui.js'
+import { isEmpty, isValidEmail } from './validators.js'
 
 const form          = document.getElementById('loginForm')
 const emailInput    = document.getElementById('loginEmail')
 const passwordInput = document.getElementById('loginPassword')
 const loginBtn      = document.getElementById('loginBtn')
 
-redirectIfAuthenticated()
+// Redirigir si ya hay sesión activa (bandera para evitar bucle)
+let redirected = false
+
+checkAuth((user) => {
+    if (user && !redirected) {
+        redirected = true
+        window.location.href = './dashboard.html'
+    }
+})
 
 form?.addEventListener('submit', async (e) => {
     e.preventDefault()
@@ -37,6 +45,7 @@ form?.addEventListener('submit', async (e) => {
             return
         }
 
+        redirected = true
         window.location.href = './dashboard.html'
 
     } catch (error) {
@@ -48,7 +57,6 @@ form?.addEventListener('submit', async (e) => {
 })
 
 // Atajo oculto para acceso administrativo: Ctrl + Shift + A
-
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.key === 'A') {
         e.preventDefault()
