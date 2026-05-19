@@ -1,42 +1,318 @@
 <!doctype html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>RentCar Manager | Dashboard</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
   <link rel="stylesheet" href="./assets/css/styles.css">
 </head>
-<body>
+
+<body class="dashboard-page">
 
   <!-- =============================================================
   ⚠️ ZONA PROTEGIDA — MÓDULO DE AUTH (Sebastián)
   No eliminar ni modificar los siguientes elementos:
-    - id="loadingState"  → spinner mientras verifica la sesión
-    - id="logoutBtn"     → botón de cerrar sesión
+    - id="loadingState"
+    - id="logoutBtn"
+
   Estos ids son requeridos por dashboard.js para funcionar.
-  Cualquier cambio puede romper la verificación de sesión
-  y la redirección por rol.
   ============================================================= -->
 
   <div id="loadingState" class="text-center py-5">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Cargando...</span>
     </div>
-    <p class="text-secondary mt-3">Verificando sesión...</p>
-  </div>
 
-  <button id="logoutBtn" class="d-none">Cerrar sesión</button>
+    <p class="text-secondary mt-3">
+      Verificando sesión...
+    </p>
+  </div>
 
   <!-- =============================================================
   ✅ FIN ZONA PROTEGIDA
-  Agregar tu navbar, hero, stats y módulos aquí.
-  Recuerda conservar los ids de arriba y no mover los scripts
-  del final del body.
   ============================================================= -->
 
+  <!-- NAVBAR -->
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+
+    <div class="container">
+
+      <a class="navbar-brand fw-bold" href="dashboard.html">
+        <i class="bi bi-car-front-fill me-2"></i>
+        RentCar Manager
+      </a>
+
+      <button class="navbar-toggler"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarNav">
+
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+          <li class="nav-item">
+            <a class="nav-link" href="./modules/vehicles.html">
+              Vehículos
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="./modules/vehicle-categories.html">
+              Categorías
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="./modules/customers.html">
+              Clientes
+            </a>
+          </li>
+
+        </ul>
+
+        <div class="d-flex align-items-center gap-2 ms-auto">
+
+          <span class="text-white small d-none d-md-inline">
+
+            <i class="bi bi-person-circle me-1"></i>
+
+            <span id="navUserName">Staff</span>
+
+          </span>
+
+          <span class="badge bg-danger">
+            🛡️ Staff
+          </span>
+
+          <!-- ⚠️ ID PROTEGIDO -->
+
+          <button id="logoutBtn"
+                  class="btn btn-outline-light btn-sm">
+
+            <i class="bi bi-box-arrow-right me-1"></i>
+            Cerrar sesión
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </nav>
+
+  <!-- MAIN -->
+
+  <main class="py-5">
+
+    <div class="container">
+
+      <!-- HEADER -->
+
+      <div class="mb-4">
+
+        <h2 class="fw-bold mb-1">
+          Panel General
+        </h2>
+
+        <p class="text-secondary mb-0">
+          Resumen financiero y operativo del sistema
+        </p>
+
+      </div>
+
+      <!-- STATS -->
+
+      <div class="row g-3 mb-4">
+
+        <!-- DISPONIBLES -->
+
+        <div class="col-md-3 col-sm-6">
+
+          <div class="card border-0 shadow-sm h-100 p-3 d-flex flex-row align-items-center">
+
+            <div class="bg-success bg-opacity-10 text-success p-2 rounded-circle me-3">
+
+              <i class="bi bi-check-circle-fill fs-4"></i>
+
+            </div>
+
+            <div>
+
+              <h4 class="fw-bold mb-0" id="statAvailable">-</h4>
+
+              <span class="text-secondary small">
+                Coches Libres
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- RENTADOS -->
+
+        <div class="col-md-3 col-sm-6">
+
+          <div class="card border-0 shadow-sm h-100 p-3 d-flex flex-row align-items-center">
+
+            <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle me-3">
+
+              <i class="bi bi-car-front-fill fs-4"></i>
+
+            </div>
+
+            <div>
+
+              <h4 class="fw-bold mb-0" id="statRented">-</h4>
+
+              <span class="text-secondary small">
+                En Renta
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- CLIENTES -->
+
+        <div class="col-md-3 col-sm-6">
+
+          <div class="card border-0 shadow-sm h-100 p-3 d-flex flex-row align-items-center">
+
+            <div class="bg-warning bg-opacity-10 text-warning p-2 rounded-circle me-3">
+
+              <i class="bi bi-people-fill fs-4"></i>
+
+            </div>
+
+            <div>
+
+              <h4 class="fw-bold mb-0" id="statCustomers">-</h4>
+
+              <span class="text-secondary small">
+                Clientes
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- INGRESOS -->
+
+        <div class="col-md-3 col-sm-6">
+
+          <div class="card border-0 shadow-sm h-100 p-3 d-flex flex-row align-items-center"
+               style="background: var(--primary-gradient);">
+
+            <div class="bg-white bg-opacity-25 text-white p-2 rounded-circle me-3">
+
+              <i class="bi bi-currency-dollar fs-4"></i>
+
+            </div>
+
+            <div class="text-white">
+
+              <h4 class="fw-bold mb-0" id="statIncome">$-</h4>
+
+              <span class="text-white-50 small">
+                Ingresos del Mes
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- HISTORIAL -->
+
+      <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+
+          <h5 class="fw-bold">
+
+            <i class="bi bi-clock-history text-primary me-2"></i>
+
+            Historial Reciente de Rentas
+
+          </h5>
+
+        </div>
+
+        <div class="card-body p-0 mt-3">
+
+          <div class="table-responsive">
+
+            <table class="table table-hover mb-0">
+
+              <thead class="table-light">
+
+                <tr>
+
+                  <th class="ps-4">Fecha</th>
+                  <th>Cliente</th>
+                  <th>Vehículo</th>
+                  <th>Estado</th>
+                  <th class="text-end pe-4">Monto</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody id="historyBody">
+
+                <tr>
+
+                  <td colspan="5"
+                      class="text-center py-4 text-muted">
+
+                    Cargando historial...
+
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- SCRIPTS -->
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
   <script type="module" src="./assets/js/dashboard.js"></script>
+
 </body>
 </html>
