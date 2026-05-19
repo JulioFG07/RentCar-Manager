@@ -179,4 +179,209 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="../assets/js/customers.js"></script>
 </body>
+</html><!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RentCar Manager | Clientes</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body class="dashboard-page">
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="../dashboard.html">
+        <i class="bi bi-car-front-fill me-2"></i>RentCar Manager
+      </a>
+      <div class="d-flex align-items-center gap-2 ms-auto">
+        <span class="text-white small d-none d-md-inline">
+          <i class="bi bi-person-circle me-1"></i>
+          <span id="navUserName">Admin</span>
+        </span>
+        <span class="badge bg-danger">🛡️ Admin</span>
+        <button id="logoutBtn" class="btn btn-outline-light btn-sm">
+          <i class="bi bi-box-arrow-right me-1"></i> Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="py-5">
+    <div class="container">
+
+      <!-- Encabezado -->
+      <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div>
+          <h2 class="fw-bold mb-1"><i class="bi bi-people-fill text-primary me-2"></i>Clientes</h2>
+          <p class="text-secondary mb-0">Gestiona la información de los clientes</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCustomerModal">
+          <i class="bi bi-person-plus me-1"></i> Nuevo cliente
+        </button>
+      </div>
+
+      <!-- Buscador -->
+      <div class="card info-card mb-4">
+        <div class="card-body p-3">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
+            <input type="text" class="form-control border-start-0" id="searchInput" placeholder="Buscar por nombre o correo...">
+          </div>
+        </div>
+      </div>
+
+      <div id="customersAlert" class="alert alert-danger d-none" role="alert"></div>
+
+      <!-- Cargando -->
+      <div id="loadingState" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+        <p class="text-secondary mt-3">Cargando clientes...</p>
+      </div>
+
+      <!-- Vacío -->
+      <div id="emptyState" class="d-none">
+        <div class="text-center py-5">
+          <i class="bi bi-people fs-1 text-muted"></i>
+          <p class="text-muted mt-3">No hay clientes registrados</p>
+          <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#createCustomerModal">
+            <i class="bi bi-person-plus me-1"></i> Agregar primer cliente
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div id="tableContainer" class="card info-card d-none">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0" id="customersTable">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Nombre completo</th>
+                  <th>Correo</th>
+                  <th>Teléfono</th>
+                  <th>Licencia</th>
+                  <th>Dirección</th>
+                  <th class="text-end pe-4">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="customersBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- MODAL CREAR CLIENTE (NUEVO) -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="modal fade" id="createCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <div>
+            <h5 class="modal-title fw-bold"><i class="bi bi-person-plus me-2 text-primary"></i>Nuevo cliente</h5>
+            <p class="text-secondary small mb-0 mt-1">Registra un cliente en el sistema</p>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body pt-3">
+          <div id="createAlert" class="alert alert-danger d-none" role="alert"></div>
+          <form id="createCustomerForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label">Nombre completo</label>
+              <input type="text" class="form-control" id="createName" placeholder="Nombre y apellidos">
+              <div class="invalid-feedback"></div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Correo electrónico</label>
+              <input type="email" class="form-control" id="createEmail" placeholder="correo@ejemplo.com">
+              <div class="invalid-feedback"></div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Teléfono <span class="text-muted">(opcional)</span></label>
+              <input type="text" class="form-control" id="createPhone" placeholder="10 dígitos">
+              <div class="invalid-feedback"></div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Número de licencia <span class="text-muted">(opcional)</span></label>
+              <input type="text" class="form-control" id="createLicense" placeholder="Al menos 6 caracteres">
+              <div class="invalid-feedback"></div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Dirección <span class="text-muted">(opcional)</span></label>
+              <input type="text" class="form-control" id="createAddress" placeholder="Calle, ciudad, estado">
+            </div>
+            <div class="d-grid">
+              <button type="submit" id="createCustomerBtn" class="btn btn-primary btn-lg">
+                <i class="bi bi-check-circle me-2"></i>Registrar cliente
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- MODAL EDITAR CLIENTE (YA EXISTÍA) -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg modal-profile">
+        <div class="modal-header border-0 pb-0">
+          <div>
+            <h5 class="modal-title fw-bold" id="editCustomerModalLabel">
+              <i class="bi bi-person-gear me-2 text-primary"></i>Editar cliente
+            </h5>
+            <p class="text-secondary small mb-0 mt-1">Actualiza la información del cliente</p>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body pt-3">
+          <div id="editAlert" class="alert alert-danger d-none" role="alert"></div>
+          <div id="editSuccess" class="alert alert-success d-none" role="alert"></div>
+          <input type="hidden" id="editCustomerId">
+          <form id="editCustomerForm" novalidate>
+            <div class="mb-3">
+              <label for="editName" class="form-label">Nombre completo</label>
+              <input type="text" class="form-control" id="editName" required>
+            </div>
+            <div class="mb-3">
+              <label for="editEmail" class="form-label">Correo electrónico</label>
+              <input type="email" class="form-control" id="editEmail" readonly>
+              <div class="form-text">El correo no se puede modificar</div>
+            </div>
+            <div class="mb-3">
+              <label for="editPhone" class="form-label">Teléfono</label>
+              <input type="text" class="form-control" id="editPhone" placeholder="10 dígitos">
+            </div>
+            <div class="mb-3">
+              <label for="editLicense" class="form-label">Número de licencia</label>
+              <input type="text" class="form-control" id="editLicense">
+            </div>
+            <div class="mb-3">
+              <label for="editAddress" class="form-label">Dirección</label>
+              <input type="text" class="form-control" id="editAddress">
+            </div>
+            <div class="d-grid">
+              <button type="submit" id="saveCustomerBtn" class="btn btn-primary btn-lg">
+                <i class="bi bi-check-circle me-2"></i>Guardar cambios
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="../assets/js/customers-enhanced.js"></script>
+</body>
 </html>

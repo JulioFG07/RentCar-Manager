@@ -1,7 +1,7 @@
 import { checkAuth, logoutUser, getCurrentUser } from './auth.js'
-import { getDocuments, updateDocument, deleteDocument, COLLECTIONS } from './firestore.js'
+import { getDocuments, createDocument, updateDocument, deleteDocument, COLLECTIONS } from './firestore.js'
 import { showAlert, hideAlert, showToast, showButtonLoader, hideButtonLoader } from './ui.js'
-import { isEmpty, isValidEmail } from './validators.js'
+import { isEmpty, isValidEmail, isValidPhone, setFieldError, clearFieldError } from './validators.js'
 
 // ── Referencias DOM ──
 const navUserName      = document.getElementById('navUserName')
@@ -11,6 +11,15 @@ const loadingState     = document.getElementById('loadingState')
 const emptyState       = document.getElementById('emptyState')
 const tableContainer   = document.getElementById('tableContainer')
 const customersBody    = document.getElementById('customersBody')
+
+// Modal crear (NUEVO)
+const createCustomerForm = document.getElementById('createCustomerForm')
+const createName         = document.getElementById('createName')
+const createEmail        = document.getElementById('createEmail')
+const createPhone        = document.getElementById('createPhone')
+const createLicense      = document.getElementById('createLicense')
+const createAddress      = document.getElementById('createAddress')
+const createCustomerBtn  = document.getElementById('createCustomerBtn')
 
 // Modal editar
 const editCustomerForm = document.getElementById('editCustomerForm')
@@ -22,15 +31,13 @@ const editLicense      = document.getElementById('editLicense')
 const editAddress      = document.getElementById('editAddress')
 const saveCustomerBtn  = document.getElementById('saveCustomerBtn')
 
+const createModalEl    = document.getElementById('createCustomerModal')
 const editModalEl      = document.getElementById('editCustomerModal')
-const editModal        = editModalEl
-    ? bootstrap.Modal.getOrCreateInstance(editModalEl)
-    : null
+const createModal      = createModalEl ? bootstrap.Modal.getOrCreateInstance(createModalEl) : null
+const editModal        = editModalEl   ? bootstrap.Modal.getOrCreateInstance(editModalEl)   : null
 
-// ── Estado local ──
 let allCustomers = []
 
-// ── Proteger ruta: solo admins ──
 checkAuth(async (user) => {
     if (!user) {
         window.location.href = '../login.html'
@@ -41,7 +48,6 @@ checkAuth(async (user) => {
     await loadCustomers()
 })
 
-// ── Cargar clientes (usuarios con role: "user") ──
 const loadCustomers = async () => {
     try {
         const result = await getDocuments(COLLECTIONS.USERS)
@@ -115,6 +121,63 @@ searchInput?.addEventListener('input', () => {
     )
 
     renderTable(filtered)
+})
+
+
+const isValidLicense = (license) => {
+    return license && license.length >= 6
+}
+
+const validateCreateForm = () => {
+    let valid = true
+    const fields = [
+        [createName,    'El nombre es obligatorio',          !isEmpty(createName.value)],
+        [createEmail,   'Ingresa un correo válido',          isValidEmail(createEmail.value)],
+        [createPhone,   'El teléfono debe tener 10 dígitos', !createPhone.value || isValidPhone(createPhone.value)],
+        [createLicense, 'La licencia debe tener al menos 6 caracteres', !createLicense.value || isValidLicense(createLicense.value)]
+    ]
+    fields.forEach(([el, msg, ok]) => {
+        if (!el) return
+        clearFieldError(el)
+        if (!ok) { setFieldError(el, msg); valid = false }
+    })
+    return valid
+}
+
+createCustomerForm?.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    hideAlert('createAlert')
+
+    if (!validateCreateForm()) return
+
+    try {
+        showButtonLoader(createCustomerBtn, 'Guardando...')
+        
+        const result = await createDocument(COLLECTIONS.USERS, {
+            name:          createName.value.trim(),
+            email:         createEmail.value.trim().toLowerCase(),
+            phone:         createPhone.value.trim()   || null,
+            licenseNumber: createLicense.value.trim() || null,
+            address:       createAddress.value.trim() || null,
+            role:          'user'
+        })
+
+        if (!result.success) { 
+            showAlert('createAlert', 'No se pudo registrar el cliente')
+            return 
+        }
+
+        showToast('Cliente registrado correctamente', 'success')
+        createCustomerForm.reset()
+        createModal?.hide()
+        await loadCustomers()
+
+    } catch (err) {
+        showAlert('createAlert', 'Error inesperado')
+        console.error(err)
+    } finally {
+        hideButtonLoader(createCustomerBtn)
+    }
 })
 
 // ── Abrir modal editar ──
