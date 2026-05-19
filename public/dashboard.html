@@ -17,15 +17,6 @@
 
 <body class="dashboard-page">
 
-  <!-- =============================================================
-  ⚠️ ZONA PROTEGIDA — MÓDULO DE AUTH (Sebastián)
-  No eliminar ni modificar los siguientes elementos:
-    - id="loadingState"
-    - id="logoutBtn"
-
-  Estos ids son requeridos por dashboard.js para funcionar.
-  ============================================================= -->
-
   <div id="loadingState" class="text-center py-5">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Cargando...</span>
@@ -35,12 +26,6 @@
       Verificando sesión...
     </p>
   </div>
-
-  <!-- =============================================================
-  ✅ FIN ZONA PROTEGIDA
-  ============================================================= -->
-
-  <!-- NAVBAR -->
 
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
 
@@ -97,8 +82,6 @@
             🛡️ Staff
           </span>
 
-          <!-- ⚠️ ID PROTEGIDO -->
-
           <button id="logoutBtn"
                   class="btn btn-outline-light btn-sm">
 
@@ -114,13 +97,9 @@
 
   </nav>
 
-  <!-- MAIN -->
-
   <main class="py-5">
 
     <div class="container">
-
-      <!-- HEADER -->
 
       <div class="mb-4">
 
@@ -134,11 +113,7 @@
 
       </div>
 
-      <!-- STATS -->
-
       <div class="row g-3 mb-4">
-
-        <!-- DISPONIBLES -->
 
         <div class="col-md-3 col-sm-6">
 
@@ -154,7 +129,7 @@
 
               <h4 class="fw-bold mb-0" id="statAvailable">-</h4>
 
-              <span class="text-secondary small">
+              <span class="text-secondary small" style="font-size: 0.8rem;">
                 Coches Libres
               </span>
 
@@ -163,8 +138,6 @@
           </div>
 
         </div>
-
-        <!-- RENTADOS -->
 
         <div class="col-md-3 col-sm-6">
 
@@ -180,7 +153,7 @@
 
               <h4 class="fw-bold mb-0" id="statRented">-</h4>
 
-              <span class="text-secondary small">
+              <span class="text-secondary small" style="font-size: 0.8rem;">
                 En Renta
               </span>
 
@@ -189,8 +162,6 @@
           </div>
 
         </div>
-
-        <!-- CLIENTES -->
 
         <div class="col-md-3 col-sm-6">
 
@@ -206,7 +177,7 @@
 
               <h4 class="fw-bold mb-0" id="statCustomers">-</h4>
 
-              <span class="text-secondary small">
+              <span class="text-secondary small" style="font-size: 0.8rem;">
                 Clientes
               </span>
 
@@ -215,8 +186,6 @@
           </div>
 
         </div>
-
-        <!-- INGRESOS -->
 
         <div class="col-md-3 col-sm-6">
 
@@ -233,7 +202,7 @@
 
               <h4 class="fw-bold mb-0" id="statIncome">$-</h4>
 
-              <span class="text-white-50 small">
+              <span class="text-white-50 small" style="font-size: 0.8rem;">
                 Ingresos del Mes
               </span>
 
@@ -244,8 +213,6 @@
         </div>
 
       </div>
-
-      <!-- HISTORIAL -->
 
       <div class="card border-0 shadow-sm">
 
@@ -307,8 +274,6 @@
     </div>
 
   </main>
-
-  <!-- SCRIPTS -->
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
