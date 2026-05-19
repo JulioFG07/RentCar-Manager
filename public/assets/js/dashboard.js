@@ -9,6 +9,8 @@ import { showButtonLoader, hideButtonLoader } from './ui.js'
 const navUserName   = document.getElementById('navUserName')
 const logoutBtn     = document.getElementById('logoutBtn')
 
+const loadingState  = document.getElementById('loadingState')
+
 const statAvailable = document.getElementById('statAvailable')
 const statRented    = document.getElementById('statRented')
 const statCustomers = document.getElementById('statCustomers')
@@ -49,45 +51,65 @@ checkAuth(async (user) => {
         const result = await getDocuments(COLLECTIONS.USERS)
 
         if (!result.success) {
+
             loadingState.innerHTML = `
                 <p class="text-danger">
                     Error al cargar el perfil.
                     <a href="./login.html">Volver al login</a>
                 </p>
             `
+
             return
         }
 
-        const profile = result.data.find(u => u.uid === user.uid)
+        const profile = result.data.find(
+            u => u.uid === user.uid
+        )
 
         if (!profile) {
+
             loadingState.innerHTML = `
                 <p class="text-danger">
                     No se encontró tu perfil.
                     <a href="./login.html">Volver al login</a>
                 </p>
             `
+
             return
         }
 
         currentProfile = profile
 
         // Redirección admins
+
         if (profile.role === 'admin') {
-            window.location.href = './modules/customers.html'
+
+            window.location.href =
+                './modules/customers.html'
+
             return
         }
 
-        // Dashboard usuario
-        renderUserDashboard(user, profile)
-
         // Dashboard general
-        navUserName.textContent = profile.name || user.email
+
+        navUserName.textContent =
+            profile.fullName || user.email
 
         await loadFullDashboard()
 
+        // ✅ OCULTAR SPINNER
+
+        loadingState.classList.add('d-none')
+
     } catch (error) {
+
         console.error(error)
+
+        loadingState.innerHTML = `
+            <p class="text-danger">
+                Error al cargar dashboard
+            </p>
+        `
     }
 })
 
@@ -104,9 +126,9 @@ const loadFullDashboard = async () => {
 
     try {
 
-        const [vehiclesRes, usersRes, rentalsRes] = await Promise.all([
+        const [vehiclesRes, customersRes, rentalsRes] = await Promise.all([
             getDocuments(COLLECTIONS.VEHICLES),
-            getDocuments(COLLECTIONS.USERS),
+            getDocuments(COLLECTIONS.CUSTOMERS),
             getDocuments(COLLECTIONS.RENTALS)
         ])
 
@@ -128,27 +150,42 @@ const loadFullDashboard = async () => {
 
         // CLIENTES
 
-        if (usersRes.success) {
-
-            const customers = usersRes.data.filter(
-                u => u.role === 'user'
-            ).length
-
-            statCustomers.textContent = customers
+        if (customersRes.success) {
+            statCustomers.textContent = customersRes.data.length
         }
 
         // RENTAS
 
         if (rentalsRes.success) {
+            const rentalsWithData = rentalsRes.data.map(rental => {
+                const customer = customersRes.data.find(c => c.id === rental.customerId)
+                const vehicle = vehiclesRes.data.find(v => v.id === rental.vehicleId)
+                return {
+                ...rental,
 
-            calculateIncomeAndHistory(rentalsRes.data)
+                customerName:
+                customer?.fullName ||
+                customer?.name ||
+                'Desconocido',
+
+                vehicleName:
+                `${vehicle?.brand || ''} ${vehicle?.model || ''}`.trim() || 'Vehiculo'
+            }
+        })
+
+            calculateIncomeAndHistory(
+                rentalsWithData
+            )
 
         } else {
 
             historyBody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="text-center py-4 text-muted">
+                    <td colspan="5"
+                        class="text-center py-4 text-muted">
+
                         No hay rentas registradas
+
                     </td>
                 </tr>
             `
@@ -157,6 +194,7 @@ const loadFullDashboard = async () => {
         }
 
     } catch (error) {
+
         console.error(error)
     }
 }
@@ -167,21 +205,33 @@ const loadFullDashboard = async () => {
 
 const calculateIncomeAndHistory = (rentals) => {
 
-    const currentMonth = new Date().getMonth()
-    const currentYear  = new Date().getFullYear()
+    const currentMonth =
+        new Date().getMonth()
+
+    const currentYear =
+        new Date().getFullYear()
 
     let monthlyIncome = 0
 
-    const recentRentals = rentals.slice(0, 10)
+    const recentRentals =
+        rentals.slice(0, 10)
 
     rentals.forEach(rental => {
 
         let rentalDate = new Date()
 
-        if (rental.createdAt && rental.createdAt.toDate) {
-            rentalDate = rental.createdAt.toDate()
+        if (
+            rental.createdAt &&
+            rental.createdAt.toDate
+        ) {
+
+            rentalDate =
+                rental.createdAt.toDate()
+
         } else if (rental.date) {
-            rentalDate = new Date(rental.date)
+
+            rentalDate =
+                new Date(rental.date)
         }
 
         if (
@@ -190,12 +240,15 @@ const calculateIncomeAndHistory = (rentals) => {
         ) {
 
             monthlyIncome += Number(
-                rental.totalPrice || rental.total || 0
+                rental.totalPrice ||
+                rental.total ||
+                0
             )
         }
     })
 
-    statIncome.textContent = `$${monthlyIncome.toFixed(2)}`
+    statIncome.textContent =
+        `$${monthlyIncome.toFixed(2)}`
 
     // HISTORIAL VACÍO
 
@@ -203,8 +256,11 @@ const calculateIncomeAndHistory = (rentals) => {
 
         historyBody.innerHTML = `
             <tr>
-                <td colspan="5" class="text-center py-4 text-muted">
+                <td colspan="5"
+                    class="text-center py-4 text-muted">
+
                     Aún no hay transacciones
+
                 </td>
             </tr>
         `
@@ -214,12 +270,20 @@ const calculateIncomeAndHistory = (rentals) => {
 
     // HISTORIAL
 
-    historyBody.innerHTML = recentRentals.map(rental => {
+    historyBody.innerHTML =
+        recentRentals.map(rental => {
 
         let dateStr = 'N/A'
 
-        if (rental.createdAt && rental.createdAt.toDate) {
-            dateStr = rental.createdAt.toDate().toLocaleDateString()
+        if (
+            rental.createdAt &&
+            rental.createdAt.toDate
+        ) {
+
+            dateStr =
+                rental.createdAt
+                    .toDate()
+                    .toLocaleDateString()
         }
 
         const statusColors = {
@@ -228,27 +292,35 @@ const calculateIncomeAndHistory = (rentals) => {
             cancelled: 'danger'
         }
 
-        const badgeColor = statusColors[rental.status] || 'secondary'
+        const badgeColor =
+            statusColors[rental.status] ||
+            'secondary'
 
-        const statusLabel = rental.status
-            ? rental.status.charAt(0).toUpperCase() + rental.status.slice(1)
-            : 'Pendiente'
+        const statusLabel =
+            rental.status
+                ? rental.status.charAt(0).toUpperCase() +
+                  rental.status.slice(1)
+                : 'Pendiente'
 
         const price = Number(
-            rental.totalPrice || rental.total || 0
+            rental.totalPrice ||
+            rental.total ||
+            0
         ).toFixed(2)
 
         return `
             <tr>
-                <td class="ps-4 text-secondary">${dateStr}</td>
+
+                <td class="ps-4 text-secondary">
+                    ${dateStr}
+                </td>
 
                 <td class="fw-medium">
-                    ${rental.customerName || 'Desconocido'}
+                    ${rental.customerName}
                 </td>
 
                 <td>
-                    ${rental.vehicleBrand || 'Vehículo'}
-                    ${rental.vehicleModel || ''}
+                    ${rental.vehicleName}
                 </td>
 
                 <td>
@@ -260,6 +332,7 @@ const calculateIncomeAndHistory = (rentals) => {
                 <td class="text-end pe-4 fw-bold text-success">
                     $${price}
                 </td>
+
             </tr>
         `
     }).join('')

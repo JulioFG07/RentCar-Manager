@@ -50,7 +50,7 @@ checkAuth(async (user) => {
 
 const loadCustomers = async () => {
     try {
-        const result = await getDocuments(COLLECTIONS.USERS)
+        const result = await getDocuments(COLLECTIONS.CUSTOMERS)
 
         if (!result.success) {
             showAlert('customersAlert', 'Error al cargar los clientes')
@@ -59,7 +59,7 @@ const loadCustomers = async () => {
         }
 
         // Filtrar solo los que tienen role "user"
-        allCustomers = result.data.filter(u => u.role === 'user')
+        allCustomers = result.data
 
         loadingState.classList.add('d-none')
         renderTable(allCustomers)
@@ -84,7 +84,7 @@ const renderTable = (customers) => {
 
     customersBody.innerHTML = customers.map(customer => `
         <tr>
-            <td class="ps-4 fw-semibold">${customer.name || '—'}</td>
+            <td class="ps-4 fw-semibold">${customer.fullName || '—'}</td>
             <td class="text-secondary">${customer.email || '—'}</td>
             <td>${customer.phone || '<span class="text-muted fst-italic small">Sin datos</span>'}</td>
             <td>${customer.licenseNumber || '<span class="text-muted fst-italic small">Sin datos</span>'}</td>
@@ -100,7 +100,7 @@ const renderTable = (customers) => {
                     </button>
                     <button
                         class="btn btn-outline-danger btn-sm"
-                        onclick="deleteCustomer('${customer.id}', '${customer.name || 'este cliente'}')"
+                        onclick="deleteCustomer('${customer.id}', '${customer.fullName || 'este cliente'}')"
                         title="Eliminar"
                     >
                         <i class="bi bi-trash"></i>
@@ -116,7 +116,7 @@ searchInput?.addEventListener('input', () => {
     const filter = searchInput.value.toLowerCase().trim()
 
     const filtered = allCustomers.filter(customer =>
-        (customer.name  || '').toLowerCase().includes(filter) ||
+        (customer.fullName  || '').toLowerCase().includes(filter) ||
         (customer.email || '').toLowerCase().includes(filter)
     )
 
@@ -153,13 +153,12 @@ createCustomerForm?.addEventListener('submit', async (e) => {
     try {
         showButtonLoader(createCustomerBtn, 'Guardando...')
         
-        const result = await createDocument(COLLECTIONS.USERS, {
+        const result = await createDocument(COLLECTIONS.CUSTOMERS, {
             name:          createName.value.trim(),
             email:         createEmail.value.trim().toLowerCase(),
             phone:         createPhone.value.trim()   || null,
             licenseNumber: createLicense.value.trim() || null,
             address:       createAddress.value.trim() || null,
-            role:          'user'
         })
 
         if (!result.success) { 
@@ -189,7 +188,7 @@ window.openEditModal = (customerId) => {
     hideAlert('editSuccess')
 
     editCustomerId.value = customer.id
-    editName.value       = customer.name          || ''
+    editName.value       = customer.fullName          || ''
     editEmail.value      = customer.email         || ''
     editPhone.value      = customer.phone         || ''
     editLicense.value    = customer.licenseNumber || ''
@@ -205,12 +204,12 @@ editCustomerForm?.addEventListener('submit', async (e) => {
     hideAlert('editAlert')
     hideAlert('editSuccess')
 
-    const name    = editName.value.trim()
+    const fullNname    = editName.value.trim()
     const phone   = editPhone.value.trim()
     const license = editLicense.value.trim()
     const address = editAddress.value.trim()
 
-    if (isEmpty(name)) {
+    if (isEmpty(fullName)) {
         showAlert('editAlert', 'El nombre es obligatorio')
         return
     }
@@ -219,10 +218,10 @@ editCustomerForm?.addEventListener('submit', async (e) => {
         showButtonLoader(saveCustomerBtn, 'Guardando...')
 
         const result = await updateDocument(
-            COLLECTIONS.USERS,
+            COLLECTIONS.CUSTOMERS,
             editCustomerId.value,
             {
-                name,
+                fullName,
                 phone:         phone   || null,
                 licenseNumber: license || null,
                 address:       address || null
@@ -239,7 +238,7 @@ editCustomerForm?.addEventListener('submit', async (e) => {
         if (index !== -1) {
             allCustomers[index] = {
                 ...allCustomers[index],
-                name,
+                fullName,
                 phone:         phone   || null,
                 licenseNumber: license || null,
                 address:       address || null
@@ -267,7 +266,7 @@ window.deleteCustomer = async (customerId, customerName) => {
     if (!confirmed) return
 
     try {
-        const result = await deleteDocument(COLLECTIONS.USERS, customerId)
+        const result = await deleteDocument(COLLECTIONS.CUSTOMERS, customerId)
 
         if (!result.success) {
             showToast('No se pudo eliminar el cliente', 'danger')
