@@ -1,6 +1,5 @@
 import { checkAuth, logoutUser } from './auth.js'
 import { getDocuments, COLLECTIONS } from './firestore.js'
-import { showButtonLoader, hideButtonLoader } from './ui.js'
 
 // ─────────────────────────────────────
 // ELEMENTOS DEL DOM
@@ -30,16 +29,16 @@ let isProcessing   = false
 // ⚠️ ZONA PROTEGIDA — MÓDULO DE AUTH (Sebastián)
 // No modificar este bloque. Contiene la lógica de verificación
 // de sesión, redirección por rol y protección de rutas.
-// Cualquier cambio aquí puede romper el login y el acceso al
-// módulo de clientes del admin.
 // =============================================================
 
 checkAuth(async (user) => {
 
     if (isProcessing) return
+
     isProcessing = true
 
     if (!user) {
+
         window.location.href = './login.html'
         return
     }
@@ -48,14 +47,20 @@ checkAuth(async (user) => {
 
     try {
 
-        const result = await getDocuments(COLLECTIONS.USERS)
+        // USERS → auth/login/roles
+
+        const result = await getDocuments(
+            COLLECTIONS.USERS
+        )
 
         if (!result.success) {
 
             loadingState.innerHTML = `
                 <p class="text-danger">
                     Error al cargar el perfil.
-                    <a href="./login.html">Volver al login</a>
+                    <a href="./login.html">
+                        Volver al login
+                    </a>
                 </p>
             `
 
@@ -71,7 +76,9 @@ checkAuth(async (user) => {
             loadingState.innerHTML = `
                 <p class="text-danger">
                     No se encontró tu perfil.
-                    <a href="./login.html">Volver al login</a>
+                    <a href="./login.html">
+                        Volver al login
+                    </a>
                 </p>
             `
 
@@ -80,8 +87,10 @@ checkAuth(async (user) => {
 
         currentProfile = profile
 
-        // Redirección admins
-
+        // ─────────────────────────────
+        // REDIRECCIÓN ADMIN
+        // ─────────────────────────────
+        console.log(profile.role)
         if (profile.role === 'admin') {
 
             window.location.href =
@@ -90,14 +99,16 @@ checkAuth(async (user) => {
             return
         }
 
-        // Dashboard general
+        // ─────────────────────────────
+        // DASHBOARD GENERAL
+        // ─────────────────────────────
 
         navUserName.textContent =
-            profile.fullName || user.email
+            profile.fullName ||
+            profile.name ||
+            user.email
 
         await loadFullDashboard()
-
-        // ✅ OCULTAR SPINNER
 
         loadingState.classList.add('d-none')
 
@@ -126,52 +137,95 @@ const loadFullDashboard = async () => {
 
     try {
 
-        const [vehiclesRes, customersRes, rentalsRes] = await Promise.all([
+        const [
+            vehiclesRes,
+            customersRes,
+            rentalsRes
+        ] = await Promise.all([
+
             getDocuments(COLLECTIONS.VEHICLES),
+
             getDocuments(COLLECTIONS.CUSTOMERS),
+
             getDocuments(COLLECTIONS.RENTALS)
         ])
 
+        // ─────────────────────────────
         // VEHÍCULOS
+        // ─────────────────────────────
 
         if (vehiclesRes.success) {
 
-            const available = vehiclesRes.data.filter(
-                v => v.status === 'available'
-            ).length
+            const available =
+                vehiclesRes.data.filter(
+                    v => v.status === 'available'
+                ).length
 
-            const rented = vehiclesRes.data.filter(
-                v => v.status === 'rented'
-            ).length
+            const rented =
+                vehiclesRes.data.filter(
+                    v => v.status === 'rented'
+                ).length
 
-            statAvailable.textContent = available
-            statRented.textContent = rented
+            statAvailable.textContent =
+                available
+
+            statRented.textContent =
+                rented
         }
 
+        // ─────────────────────────────
         // CLIENTES
+        // ─────────────────────────────
 
         if (customersRes.success) {
-            statCustomers.textContent = customersRes.data.length
+
+            statCustomers.textContent =
+                customersRes.data.length
         }
 
+        // ─────────────────────────────
         // RENTAS
+        // ─────────────────────────────
 
         if (rentalsRes.success) {
-            const rentalsWithData = rentalsRes.data.map(rental => {
-                const customer = customersRes.data.find(c => c.id === rental.customerId)
-                const vehicle = vehiclesRes.data.find(v => v.id === rental.vehicleId)
+
+            // Relacionar rentals
+            // con customers y vehicles
+
+            const rentalsWithData =
+                rentalsRes.data.map(rental => {
+
+                const customer =
+                    customersRes.data.find(
+                        c => c.id === rental.customerId
+                    )
+
+                const vehicle =
+                    vehiclesRes.data.find(
+                        v => v.id === rental.vehicleId
+                    )
+
                 return {
-                ...rental,
 
-                customerName:
-                customer?.fullName ||
-                customer?.name ||
-                'Desconocido',
+                    ...rental,
 
-                vehicleName:
-                `${vehicle?.brand || ''} ${vehicle?.model || ''}`.trim() || 'Vehiculo'
-            }
-        })
+                    customerName:
+
+                        customer?.fullName ||
+
+                        customer?.name ||
+
+                        'Desconocido',
+
+                    vehicleName:
+
+                        `${vehicle?.brand || ''} ${vehicle?.model || ''}`.trim()
+
+                        ||
+
+                        'Vehículo'
+                }
+            })
 
             calculateIncomeAndHistory(
                 rentalsWithData
@@ -190,7 +244,8 @@ const loadFullDashboard = async () => {
                 </tr>
             `
 
-            statIncome.textContent = '$0.00'
+            statIncome.textContent =
+                '$0.00'
         }
 
     } catch (error) {
@@ -235,13 +290,19 @@ const calculateIncomeAndHistory = (rentals) => {
         }
 
         if (
+
             rentalDate.getMonth() === currentMonth &&
+
             rentalDate.getFullYear() === currentYear
+
         ) {
 
             monthlyIncome += Number(
+
                 rental.totalPrice ||
+
                 rental.total ||
+
                 0
             )
         }
@@ -250,7 +311,9 @@ const calculateIncomeAndHistory = (rentals) => {
     statIncome.textContent =
         `$${monthlyIncome.toFixed(2)}`
 
+    // ─────────────────────────────
     // HISTORIAL VACÍO
+    // ─────────────────────────────
 
     if (recentRentals.length === 0) {
 
@@ -268,7 +331,9 @@ const calculateIncomeAndHistory = (rentals) => {
         return
     }
 
+    // ─────────────────────────────
     // HISTORIAL
+    // ─────────────────────────────
 
     historyBody.innerHTML =
         recentRentals.map(rental => {
@@ -287,25 +352,39 @@ const calculateIncomeAndHistory = (rentals) => {
         }
 
         const statusColors = {
+
             active: 'primary',
+
             completed: 'success',
+
             cancelled: 'danger'
         }
 
         const badgeColor =
-            statusColors[rental.status] ||
-            'secondary'
+            statusColors[rental.status]
+            || 'secondary'
 
         const statusLabel =
+
             rental.status
-                ? rental.status.charAt(0).toUpperCase() +
-                  rental.status.slice(1)
+
+                ? rental.status.charAt(0)
+                    .toUpperCase()
+
+                    +
+
+                    rental.status.slice(1)
+
                 : 'Pendiente'
 
         const price = Number(
+
             rental.totalPrice ||
+
             rental.total ||
+
             0
+
         ).toFixed(2)
 
         return `
@@ -342,9 +421,12 @@ const calculateIncomeAndHistory = (rentals) => {
 // LOGOUT
 // ─────────────────────────────────────
 
-logoutBtn?.addEventListener('click', async () => {
+logoutBtn?.addEventListener(
+    'click',
+    async () => {
 
     await logoutUser()
 
-    window.location.href = './login.html'
+    window.location.href =
+        './login.html'
 })
