@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+import { initializeFirestore, memoryLocalCache } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -15,7 +15,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
-const db = getFirestore(app);
+
+// memoryLocalCache desactiva la persistencia offline — todas las
+// lecturas y escrituras van directo al servidor, sin caché local
+const db = initializeFirestore(app, {
+    localCache: memoryLocalCache()
+});
+
 const storage = getStorage(app);
 
 export {
