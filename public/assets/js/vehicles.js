@@ -1,56 +1,82 @@
 import { checkAuth, logoutUser } from './auth.js'
-import { getDocuments, createDocument, updateDocument, deleteDocument, COLLECTIONS } from './firestore.js'
+import { getDocuments, getDocumentById, getDocumentFromServer, createDocument, updateDocument, deleteDocument, COLLECTIONS } from './firestore.js'
+import { uploadVehicleImage, deleteVehicleImage } from './storage.js'
 import { showToast, showButtonLoader, hideButtonLoader, showAlert, hideAlert } from './ui.js'
 import { isEmpty, isValidYear, isValidPrice, setFieldError, clearFieldError } from './validators.js'
 
 // ── DOM ──
-const navUserName      = document.getElementById('navUserName')
-const logoutBtn        = document.getElementById('logoutBtn')
-const searchInput      = document.getElementById('searchInput')
-const filterStatus     = document.getElementById('filterStatus')
-const loadingState     = document.getElementById('loadingState')
-const emptyState       = document.getElementById('emptyState')
-const tableContainer   = document.getElementById('tableContainer')
-const vehiclesBody     = document.getElementById('vehiclesBody')
+const searchInput    = document.getElementById('searchInput')
+const filterStatus   = document.getElementById('filterStatus')
+const loadingState   = document.getElementById('loadingState')
+const emptyState     = document.getElementById('emptyState')
+const tableContainer = document.getElementById('tableContainer')
+const vehiclesBody   = document.getElementById('vehiclesBody')
 
 // Modal crear
-const createForm       = document.getElementById('createVehicleForm')
-const createBrand      = document.getElementById('createBrand')
-const createModel      = document.getElementById('createModel')
-const createYear       = document.getElementById('createYear')
-const createPlate      = document.getElementById('createPlate')
-const createCategory   = document.getElementById('createCategory')
-const createPrice      = document.getElementById('createDailyPrice')
-const createBtn        = document.getElementById('createVehicleBtn')
+const createForm        = document.getElementById('createVehicleForm')
+const createBrand       = document.getElementById('createBrand')
+const createModel       = document.getElementById('createModel')
+const createYear        = document.getElementById('createYear')
+const createPlate       = document.getElementById('createPlate')
+const createCategory    = document.getElementById('createCategory')
+const createPrice       = document.getElementById('createDailyPrice')
+const createBtn         = document.getElementById('createVehicleBtn')
+const createImageInput  = document.getElementById('createImage')
+const createPreviewEl   = document.getElementById('createImagePreview')
+const createPreviewImg  = createPreviewEl?.querySelector('img')
+const createDropZone    = document.getElementById('createDropZone')
+const createRemoveBtn   = document.getElementById('createRemoveImg')
 
 // Modal editar
-const editForm         = document.getElementById('editVehicleForm')
-const editId           = document.getElementById('editVehicleId')
-const editBrand        = document.getElementById('editBrand')
-const editModel        = document.getElementById('editModel')
-const editYear         = document.getElementById('editYear')
-const editPlate        = document.getElementById('editPlate')
-const editCategory     = document.getElementById('editCategory')
-const editPrice        = document.getElementById('editDailyPrice')
-const editStatus       = document.getElementById('editStatus')
-const saveBtn          = document.getElementById('saveVehicleBtn')
+const editForm          = document.getElementById('editVehicleForm')
+const editId            = document.getElementById('editVehicleId')
+const editBrand         = document.getElementById('editBrand')
+const editModel         = document.getElementById('editModel')
+const editYear          = document.getElementById('editYear')
+const editPlate         = document.getElementById('editPlate')
+const editCategory      = document.getElementById('editCategory')
+const editPrice         = document.getElementById('editDailyPrice')
+const editStatus        = document.getElementById('editStatus')
+const saveBtn           = document.getElementById('saveVehicleBtn')
+const editImageInput    = document.getElementById('editImage')
+const editCurrentImg    = document.getElementById('editCurrentImg')
+const editCurrentImgEl  = document.getElementById('editCurrentImgEl')
+const editRemoveBtn     = document.getElementById('editRemoveImg')
+const editPreviewEl     = document.getElementById('editImagePreview')
+const editPreviewImg    = editPreviewEl?.querySelector('img')
+const editCancelNewBtn  = document.getElementById('editCancelNewImg')
+const editDropZone      = document.getElementById('editDropZone')
 
-const createModalEl    = document.getElementById('createVehicleModal')
-const editModalEl      = document.getElementById('editVehicleModal')
-const createModal      = createModalEl ? bootstrap.Modal.getOrCreateInstance(createModalEl) : null
-const editModal        = editModalEl   ? bootstrap.Modal.getOrCreateInstance(editModalEl)   : null
+const createModalEl = document.getElementById('createVehicleModal')
+const editModalEl   = document.getElementById('editVehicleModal')
+const createModal   = createModalEl ? bootstrap.Modal.getOrCreateInstance(createModalEl) : null
+const editModal     = editModalEl   ? bootstrap.Modal.getOrCreateInstance(editModalEl)   : null
 
-let allVehicles = []
-let categories  = []
+let allVehicles     = []
+let categories      = []
+let currentUser     = null
+let createImageFile = null
+let editImageFile   = null
+let editRemoveImage = false
 
 // ── Proteger ruta ──
 checkAuth(async (user) => {
     if (!user) { window.location.href = '../login.html'; return }
-    navUserName.textContent = user.displayName || user.email
+    currentUser = user
     await Promise.all([loadCategories(), loadVehicles()])
 })
 
-// ── Cargar categorías para los selects ──
+// ── Navbar ──
+document.addEventListener('navbarLoaded', () => {
+    const navbarContainer = document.getElementById('navbarContainer')
+    const navUserName = navbarContainer?.querySelector('#navUserName')
+    const logoutBtn   = navbarContainer?.querySelector('#logoutBtn')
+    if (navUserName && currentUser) navUserName.textContent = currentUser.displayName || currentUser.email
+    logoutBtn?.addEventListener('click', async () => { await logoutUser(); window.location.href = '../login.html' })
+})
+
+/* ======================================================
+   IMAGEN — preview local
 const loadCategories = async () => {
     const result = await getDocuments(COLLECTIONS.VEHICLE_CATEGORIES)
     if (!result.success) return
@@ -60,7 +86,6 @@ const loadCategories = async () => {
     if (editCategory)   editCategory.innerHTML   = `<option value="">Seleccionar categoría</option>${options}`
 }
 
-// ── Cargar vehículos ──
 const loadVehicles = async () => {
     try {
         const result = await getDocuments(COLLECTIONS.VEHICLES)
@@ -79,12 +104,11 @@ const loadVehicles = async () => {
     }
 }
 
-// ── Renderizar tabla ──
 const statusBadge = (status) => {
     const map = {
-        available:   ['success', 'Disponible'],
-        rented:      ['primary', 'Rentado'],
-        maintenance: ['warning', 'Mantenimiento'],
+        available:   ['success',   'Disponible'],
+        rented:      ['primary',   'Rentado'],
+        maintenance: ['warning',   'Mantenimiento'],
         inactive:    ['secondary', 'Inactivo']
     }
     const [color, label] = map[status] || ['secondary', status]
@@ -96,6 +120,9 @@ const getCategoryName = (id) => {
     return cat ? cat.name : '<span class="text-muted fst-italic small">Sin categoría</span>'
 }
 
+const NO_IMG = `<div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:48px;height:38px">
+    <i class="bi bi-car-front text-secondary" style="font-size:.9rem"></i></div>`
+
 const renderTable = (vehicles) => {
     if (vehicles.length === 0) {
         tableContainer.classList.add('d-none')
@@ -106,7 +133,12 @@ const renderTable = (vehicles) => {
     tableContainer.classList.remove('d-none')
     vehiclesBody.innerHTML = vehicles.map(v => `
         <tr>
-            <td class="ps-4 fw-semibold">${v.brand} ${v.model}</td>
+            <td class="ps-4">
+                ${v.imageUrl
+                    ? `<img src="${v.imageUrl}" style="width:48px;height:38px;object-fit:cover;border-radius:6px" alt="${v.brand}">`
+                    : NO_IMG}
+            </td>
+            <td class="fw-semibold">${v.brand} ${v.model}</td>
             <td class="text-secondary">${v.year}</td>
             <td>${v.plate}</td>
             <td>${getCategoryName(v.categoryId)}</td>
@@ -126,7 +158,6 @@ const renderTable = (vehicles) => {
     `).join('')
 }
 
-// ── Buscador + filtro ──
 const applyFilters = () => {
     const search = searchInput?.value.toLowerCase().trim() || ''
     const status = filterStatus?.value || ''
@@ -140,20 +171,18 @@ const applyFilters = () => {
 searchInput?.addEventListener('input', applyFilters)
 filterStatus?.addEventListener('change', applyFilters)
 
-// ── Validar formulario ──
-const isValidPlate = (plate) => {
-    return plate && plate.length >= 5 && plate.length <= 10 && /^[A-Z0-9-]+$/.test(plate.toUpperCase())
-}
+/* ======================================================
+   VALIDACIÓN
 
 const validateVehicleForm = (brand, model, year, plate, categoryId, price) => {
     let valid = true
     const fields = [
-        [brand,      'La marca es obligatoria', !isEmpty(brand.value)],
-        [model,      'El modelo es obligatorio', !isEmpty(model.value)],
-        [year,       'Año inválido (1900 - año actual)', isValidYear(year.value)],
+        [brand,      'La marca es obligatoria',                       !isEmpty(brand.value)],
+        [model,      'El modelo es obligatorio',                      !isEmpty(model.value)],
+        [year,       'Año inválido (1900 - año actual)',               isValidYear(year.value)],
         [plate,      'Placa inválida (5-10 caracteres alfanuméricos)', isValidPlate(plate.value)],
-        [categoryId, 'Selecciona una categoría', !isEmpty(categoryId.value)],
-        [price,      'El precio debe ser mayor a 0', isValidPrice(price.value)]
+        [categoryId, 'Selecciona una categoría',                      !isEmpty(categoryId.value)],
+        [price,      'El precio debe ser mayor a 0',                  isValidPrice(price.value)],
     ]
     fields.forEach(([el, msg, ok]) => {
         if (!el) return
@@ -163,16 +192,8 @@ const validateVehicleForm = (brand, model, year, plate, categoryId, price) => {
     return valid
 }
 
-// ── Crear vehículo ──
-createForm?.addEventListener('submit', async (e) => {
-    e.preventDefault()
-    hideAlert('createAlert')
-
-    const ok = validateVehicleForm(createBrand, createModel, createYear, createPlate, createCategory, createPrice)
-    if (!ok) return
-
-    try {
-        showButtonLoader(createBtn, 'Guardando...')
+/* ======================================================
+   CREAR
         const result = await createDocument(COLLECTIONS.VEHICLES, {
             brand:      createBrand.value.trim(),
             model:      createModel.value.trim(),
@@ -180,9 +201,20 @@ createForm?.addEventListener('submit', async (e) => {
             plate:      createPlate.value.trim().toUpperCase(),
             categoryId: createCategory.value,
             dailyPrice: Number(createPrice.value),
-            status:     'available'
+            status:     'available',
+            imageUrl:   null
         })
         if (!result.success) { showAlert('createAlert', 'No se pudo guardar el vehículo'); return }
+
+        if (createImageFile) {
+            const uploadResult = await uploadVehicleImage(result.id, createImageFile)
+            if (uploadResult.success && uploadResult.url) {
+                await updateDocument(COLLECTIONS.VEHICLES, result.id, { imageUrl: uploadResult.url })
+            } else {
+                showToast('Vehículo guardado pero la foto no se pudo subir', 'warning')
+            }
+        }
+
         showToast('Vehículo registrado correctamente', 'success')
         createForm.reset()
         createModal?.hide()
@@ -195,45 +227,88 @@ createForm?.addEventListener('submit', async (e) => {
     }
 })
 
-// ── Abrir modal editar ──
+/* ======================================================
+   EDITAR
 window.openEditVehicle = (id) => {
     const v = allVehicles.find(x => x.id === id)
     if (!v) return
     hideAlert('editAlert')
-    editId.value            = v.id
-    editBrand.value         = v.brand       || ''
-    editModel.value         = v.model       || ''
-    editYear.value          = v.year        || ''
-    editPlate.value         = v.plate       || ''
-    editPrice.value         = v.dailyPrice  || ''
-    editStatus.value        = v.status      || 'available'
+    editImageFile   = null
+    editRemoveImage = false
+    editId.value       = v.id
+    editBrand.value    = v.brand      || ''
+    editModel.value    = v.model      || ''
+    editYear.value     = v.year       || ''
+    editPlate.value    = v.plate      || ''
+    editPrice.value    = v.dailyPrice || ''
+    editStatus.value   = v.status     || 'available'
     if (editCategory) editCategory.value = v.categoryId || ''
+
+    if (v.imageUrl && !v.imageUrl.startsWith('data:')) {
+        editCurrentImgEl.src = v.imageUrl
+        editCurrentImg.classList.remove('d-none')
+    } else {
+        editCurrentImg.classList.add('d-none')
+    }
+    editPreviewEl.classList.add('d-none')
+    editImageInput.value = ''
     editModal?.show()
 }
 
-// ── Guardar edición ──
 editForm?.addEventListener('submit', async (e) => {
     e.preventDefault()
     hideAlert('editAlert')
-
-    const ok = validateVehicleForm(editBrand, editModel, editYear, editPlate, editCategory, editPrice)
-    if (!ok) return
-
+    if (!validateVehicleForm(editBrand, editModel, editYear, editPlate, editCategory, editPrice)) return
     try {
         showButtonLoader(saveBtn, 'Guardando...')
-        const result = await updateDocument(COLLECTIONS.VEHICLES, editId.value, {
+
+        const currentVehicle = allVehicles.find(v => v.id === editId.value)
+        let imageUrl = currentVehicle?.imageUrl || null
+
+        // Limpiar imágenes base64 antiguas
+        if (imageUrl && imageUrl.startsWith('data:')) {
+            imageUrl = null
+            if (!editImageFile) {
+                showToast('La foto anterior era muy grande. Por favor vuelve a subir la imagen.', 'warning')
+            }
+        }
+
+        if (editImageFile) {
+            const uploadResult = await uploadVehicleImage(editId.value, editImageFile)
+            if (uploadResult.success && uploadResult.url) {
+                imageUrl = uploadResult.url
+            } else {
+                showToast('Los datos se guardarán pero la foto no se pudo subir', 'warning')
+            }
+        } else if (editRemoveImage) {
+            imageUrl = null
+        }
+
+        const dataToSave = {
             brand:      editBrand.value.trim(),
             model:      editModel.value.trim(),
             year:       Number(editYear.value),
             plate:      editPlate.value.trim().toUpperCase(),
             categoryId: editCategory.value,
             dailyPrice: Number(editPrice.value),
-            status:     editStatus.value
-        })
-        if (!result.success) { showAlert('editAlert', 'No se pudo actualizar'); return }
+            status:     editStatus.value,
+            imageUrl:   imageUrl || null
+        }
+
+        const result = await updateDocument(COLLECTIONS.VEHICLES, editId.value, dataToSave)
+        if (!result.success) { showAlert('editAlert', 'No se pudo actualizar: ' + result.error); return }
+
+        // Verificar en servidor (sin caché) que imageUrl se guardó
+        const verify = await getDocumentFromServer(COLLECTIONS.VEHICLES, editId.value)
+        console.log('✅ Verificación SERVIDOR — imageUrl:', verify.data?.imageUrl || '❌ NULL — NO se guardó en servidor')
+
+        allVehicles = allVehicles.map(v =>
+            v.id === editId.value ? { ...v, ...dataToSave } : v
+        )
+        renderTable(allVehicles)
+
         showToast('Vehículo actualizado', 'success')
         editModal?.hide()
-        await loadVehicles()
     } catch (err) {
         showAlert('editAlert', 'Ocurrió un error inesperado')
         console.error(err)
@@ -242,10 +317,8 @@ editForm?.addEventListener('submit', async (e) => {
     }
 })
 
-// ── Eliminar ──
-window.deleteVehicle = async (id, nombre) => {
-    if (!confirm(`¿Eliminar "${nombre}"?\nEsta acción no se puede deshacer.`)) return
-    try {
+/* ======================================================
+   ELIMINAR
         const result = await deleteDocument(COLLECTIONS.VEHICLES, id)
         if (!result.success) { showToast('No se pudo eliminar', 'danger'); return }
         allVehicles = allVehicles.filter(v => v.id !== id)
@@ -256,9 +329,3 @@ window.deleteVehicle = async (id, nombre) => {
         console.error(err)
     }
 }
-
-// ── Logout ──
-logoutBtn?.addEventListener('click', async () => {
-    await logoutUser()
-    window.location.href = '../login.html'
-})

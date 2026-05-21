@@ -1,34 +1,12 @@
 import { checkAuth, logoutUser } from './auth.js'
 import { getDocuments, COLLECTIONS } from './firestore.js'
 
-// ─────────────────────────────────────
-// ELEMENTOS DEL DOM
-// ─────────────────────────────────────
-
-const navUserName   = document.getElementById('navUserName')
-const logoutBtn     = document.getElementById('logoutBtn')
-
-const loadingState  = document.getElementById('loadingState')
-
-const statAvailable = document.getElementById('statAvailable')
-const statRented    = document.getElementById('statRented')
-const statCustomers = document.getElementById('statCustomers')
-const statIncome    = document.getElementById('statIncome')
-
-const historyBody   = document.getElementById('historyBody')
-
-// ─────────────────────────────────────
-// VARIABLES DE SESIÓN
-// ─────────────────────────────────────
-
 let currentUser    = null
 let currentProfile = null
 let isProcessing   = false
 
 // =============================================================
 // ⚠️ ZONA PROTEGIDA — MÓDULO DE AUTH (Sebastián)
-// No modificar este bloque. Contiene la lógica de verificación
-// de sesión, redirección por rol y protección de rutas.
 // =============================================================
 
 checkAuth(async (user) => {
@@ -54,16 +32,8 @@ checkAuth(async (user) => {
         )
 
         if (!result.success) {
-
-            loadingState.innerHTML = `
-                <p class="text-danger">
-                    Error al cargar el perfil.
-                    <a href="./login.html">
-                        Volver al login
-                    </a>
-                </p>
-            `
-
+            document.getElementById('loadingState').innerHTML =
+                `<p class="text-danger">Error al cargar el perfil. <a href="./login.html">Volver al login</a></p>`
             return
         }
 
@@ -72,16 +42,8 @@ checkAuth(async (user) => {
         )
 
         if (!profile) {
-
-            loadingState.innerHTML = `
-                <p class="text-danger">
-                    No se encontró tu perfil.
-                    <a href="./login.html">
-                        Volver al login
-                    </a>
-                </p>
-            `
-
+            document.getElementById('loadingState').innerHTML =
+                `<p class="text-danger">No se encontró tu perfil. <a href="./login.html">Volver al login</a></p>`
             return
         }
 
@@ -126,307 +88,151 @@ checkAuth(async (user) => {
 
 // =============================================================
 // ✅ FIN ZONA PROTEGIDA
-// Código dashboard
 // =============================================================
 
-// ─────────────────────────────────────
-// DASHBOARD PRINCIPAL
-// ─────────────────────────────────────
+// ── Helper: adjuntar logout a cualquier botón que ya esté en el DOM ──
+const attachLogout = () => {
+    const navbarContainer = document.getElementById('navbarContainer')
+    const logoutBtn = navbarContainer?.querySelector('#logoutBtn')
+    if (logoutBtn && !logoutBtn.dataset.logoutBound) {
+        logoutBtn.dataset.logoutBound = 'true'   // evitar duplicar el listener
+        logoutBtn.addEventListener('click', async () => {
+            await logoutUser()
+            window.location.href = './login.html'
+        })
+    }
+}
 
-const loadFullDashboard = async () => {
+// ── Navbar: cuando cargue dinámicamente ──
+document.addEventListener('navbarLoaded', () => {
+    attachLogout()
+
+    // Si checkAuth ya terminó, poner el nombre ahora
+    if (currentProfile) {
+        const navbarContainer = document.getElementById('navbarContainer')
+        const navUserName = navbarContainer?.querySelector('#navUserName')
+        if (navUserName) {
+            navUserName.textContent = currentProfile.fullName || currentProfile.name || currentUser?.displayName || currentUser?.email
+        }
+    }
+})
+
+const renderUserDashboard = async (user, profile) => {
+
+    // Ocultar loading y mostrar contenido
+    document.getElementById('loadingState').classList.add('d-none')
+    document.getElementById('dashboardContent').classList.remove('d-none')
+
+    // Nombre de bienvenida
+    const welcomeName = document.getElementById('welcomeName')
+    if (welcomeName) {
+        const fullName = profile.name || profile.fullName || user.displayName || user.email
+        // En el dashboard mostrar solo el primer nombre para evitar desbordamiento
+        welcomeName.textContent = fullName.split(' ')[0] || fullName
+    }
+
+    // Actualizar navbar si ya cargó (checkAuth llegó después de navbarLoaded)
+    const navbarContainer = document.getElementById('navbarContainer')
+    const navUserName = navbarContainer?.querySelector('#navUserName')
+    if (navUserName) {
+        navUserName.textContent = profile.name || profile.fullName || user.displayName || user.email
+    }
+    attachLogout()
+
+    await loadDashboardData()
+}
+
+const loadDashboardData = async () => {
 
     try {
-
-        const [
-            vehiclesRes,
-            customersRes,
-            rentalsRes
-        ] = await Promise.all([
-
+        const [vehiclesRes, categoriesRes] = await Promise.all([
             getDocuments(COLLECTIONS.VEHICLES),
-
-            getDocuments(COLLECTIONS.CUSTOMERS),
-
-            getDocuments(COLLECTIONS.RENTALS)
+            getDocuments(COLLECTIONS.VEHICLE_CATEGORIES)
         ])
 
-        // ─────────────────────────────
-        // VEHÍCULOS
-        // ─────────────────────────────
-
+        // Stats rápidas
         if (vehiclesRes.success) {
+            const available = vehiclesRes.data.filter(v => v.status === 'available' && v.active !== false)
+            const rented    = vehiclesRes.data.filter(v => v.status === 'rented')
 
-            const available =
-                vehiclesRes.data.filter(
-                    v => v.status === 'available'
-                ).length
+            const statAvailable = document.getElementById('statAvailable')
+            const statRented    = document.getElementById('statRented')
+            if (statAvailable) statAvailable.textContent = available.length
+            if (statRented)    statRented.textContent    = rented.length
 
-            const rented =
-                vehiclesRes.data.filter(
-                    v => v.status === 'rented'
-                ).length
-
-            statAvailable.textContent =
-                available
-
-            statRented.textContent =
-                rented
+            // Vehículos destacados (máximo 6)
+            renderVehiclesGrid(available.slice(0, 6), categoriesRes.data || [])
         }
 
-        // ─────────────────────────────
-        // CLIENTES
-        // ─────────────────────────────
-
-        if (customersRes.success) {
-
-            statCustomers.textContent =
-                customersRes.data.length
-        }
-
-        // ─────────────────────────────
-        // RENTAS
-        // ─────────────────────────────
-
-        if (rentalsRes.success) {
-
-            // Relacionar rentals
-            // con customers y vehicles
-
-            const rentalsWithData =
-                rentalsRes.data.map(rental => {
-
-                const customer =
-                    customersRes.data.find(
-                        c => c.id === rental.customerId
-                    )
-
-                const vehicle =
-                    vehiclesRes.data.find(
-                        v => v.id === rental.vehicleId
-                    )
-
-                return {
-
-                    ...rental,
-
-                    customerName:
-
-                        customer?.fullName ||
-
-                        customer?.name ||
-
-                        'Desconocido',
-
-                    vehicleName:
-
-                        `${vehicle?.brand || ''} ${vehicle?.model || ''}`.trim()
-
-                        ||
-
-                        'Vehículo'
-                }
-            })
-
-            calculateIncomeAndHistory(
-                rentalsWithData
-            )
-
-        } else {
-
-            historyBody.innerHTML = `
-                <tr>
-                    <td colspan="5"
-                        class="text-center py-4 text-muted">
-
-                        No hay rentas registradas
-
-                    </td>
-                </tr>
-            `
-
-            statIncome.textContent =
-                '$0.00'
+        if (categoriesRes.success) {
+            const statCategories = document.getElementById('statCategories')
+            if (statCategories) {
+                statCategories.textContent = categoriesRes.data.filter(c => c.active !== false).length
+            }
         }
 
     } catch (error) {
-
-        console.error(error)
+        console.error('Error cargando dashboard:', error)
     }
 }
 
-// ─────────────────────────────────────
-// INGRESOS E HISTORIAL
-// ─────────────────────────────────────
+const renderVehiclesGrid = (vehicles, categories) => {
+    return // Dashboard rediseñado — vehículos no se muestran aquí
 
-const calculateIncomeAndHistory = (rentals) => {
+    const loading = document.getElementById('vehiclesLoading')
+    const grid    = document.getElementById('vehiclesGrid')
+    const empty   = document.getElementById('vehiclesEmpty')
 
-    const currentMonth =
-        new Date().getMonth()
+    if (loading) loading.classList.add('d-none')
 
-    const currentYear =
-        new Date().getFullYear()
-
-    let monthlyIncome = 0
-
-    const recentRentals =
-        rentals.slice(0, 10)
-
-    rentals.forEach(rental => {
-
-        let rentalDate = new Date()
-
-        if (
-            rental.createdAt &&
-            rental.createdAt.toDate
-        ) {
-
-            rentalDate =
-                rental.createdAt.toDate()
-
-        } else if (rental.date) {
-
-            rentalDate =
-                new Date(rental.date)
-        }
-
-        if (
-
-            rentalDate.getMonth() === currentMonth &&
-
-            rentalDate.getFullYear() === currentYear
-
-        ) {
-
-            monthlyIncome += Number(
-
-                rental.totalPrice ||
-
-                rental.total ||
-
-                0
-            )
-        }
-    })
-
-    statIncome.textContent =
-        `$${monthlyIncome.toFixed(2)}`
-
-    // ─────────────────────────────
-    // HISTORIAL VACÍO
-    // ─────────────────────────────
-
-    if (recentRentals.length === 0) {
-
-        historyBody.innerHTML = `
-            <tr>
-                <td colspan="5"
-                    class="text-center py-4 text-muted">
-
-                    Aún no hay transacciones
-
-                </td>
-            </tr>
-        `
-
+    if (vehicles.length === 0) {
+        if (empty) empty.classList.remove('d-none')
         return
     }
 
-    // ─────────────────────────────
-    // HISTORIAL
-    // ─────────────────────────────
+    const getCategoryName = (categoryId) => {
+        const cat = categories.find(c => c.id === categoryId)
+        return cat ? cat.name : 'Sin categoría'
+    }
 
-    historyBody.innerHTML =
-        recentRentals.map(rental => {
-
-        let dateStr = 'N/A'
-
-        if (
-            rental.createdAt &&
-            rental.createdAt.toDate
-        ) {
-
-            dateStr =
-                rental.createdAt
-                    .toDate()
-                    .toLocaleDateString()
-        }
-
-        const statusColors = {
-
-            active: 'primary',
-
-            completed: 'success',
-
-            cancelled: 'danger'
-        }
-
-        const badgeColor =
-            statusColors[rental.status]
-            || 'secondary'
-
-        const statusLabel =
-
-            rental.status
-
-                ? rental.status.charAt(0)
-                    .toUpperCase()
-
-                    +
-
-                    rental.status.slice(1)
-
-                : 'Pendiente'
-
-        const price = Number(
-
-            rental.totalPrice ||
-
-            rental.total ||
-
-            0
-
-        ).toFixed(2)
-
-        return `
-            <tr>
-
-                <td class="ps-4 text-secondary">
-                    ${dateStr}
-                </td>
-
-                <td class="fw-medium">
-                    ${rental.customerName}
-                </td>
-
-                <td>
-                    ${rental.vehicleName}
-                </td>
-
-                <td>
-                    <span class="badge bg-${badgeColor} bg-opacity-10 text-${badgeColor}">
-                        ${statusLabel}
-                    </span>
-                </td>
-
-                <td class="text-end pe-4 fw-bold text-success">
-                    $${price}
-                </td>
-
-            </tr>
-        `
-    }).join('')
+    // grid.classList.remove('d-none')  // Oculto en nuevo diseño del dashboard
+    grid.innerHTML = vehicles.map(v => `
+        <div class="col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle me-3">
+                            <i class="bi bi-car-front-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">${v.brand} ${v.model}</h6>
+                            <small class="text-secondary">${v.year}</small>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-light text-secondary border">
+                            <i class="bi bi-tag me-1"></i>${getCategoryName(v.categoryId)}
+                        </span>
+                        <span class="badge bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-check-circle me-1"></i>Disponible
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold text-primary fs-5">$${Number(v.dailyPrice).toFixed(2)}</span>
+                            <small class="text-secondary"> / día</small>
+                        </div>
+                        <a href="./modules/rentals.html" class="btn btn-primary btn-sm px-3">
+                            <i class="bi bi-calendar-plus me-1"></i>Rentar
+                        </a>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="bi bi-credit-card me-1"></i>Placa: ${v.plate}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('')
 }
-
-// ─────────────────────────────────────
-// LOGOUT
-// ─────────────────────────────────────
-
-logoutBtn?.addEventListener(
-    'click',
-    async () => {
-
-    await logoutUser()
-
-    window.location.href =
-        './login.html'
-})

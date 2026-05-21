@@ -4,8 +4,6 @@ import { showToast, showButtonLoader, hideButtonLoader, showAlert, hideAlert } f
 import { isEmpty, setFieldError, clearFieldError } from './validators.js'
 
 // ── DOM ──
-const navUserName   = document.getElementById('navUserName')
-const logoutBtn     = document.getElementById('logoutBtn')
 const searchInput   = document.getElementById('searchInput')
 const loadingState  = document.getElementById('loadingState')
 const emptyState    = document.getElementById('emptyState')
@@ -32,12 +30,30 @@ const createModal   = createModalEl ? bootstrap.Modal.getOrCreateInstance(create
 const editModal     = editModalEl   ? bootstrap.Modal.getOrCreateInstance(editModalEl)   : null
 
 let allCategories = []
+let currentUser   = null
 
 // ── Proteger ruta ──
 checkAuth(async (user) => {
     if (!user) { window.location.href = '../login.html'; return }
-    navUserName.textContent = user.displayName || user.email
+    currentUser = user
     await loadCategories()
+})
+
+// ── Inicializar elementos del navbar cuando esté cargado ──
+document.addEventListener('navbarLoaded', () => {
+    const navUserName = document.getElementById('navUserName')
+    const logoutBtn   = document.getElementById('logoutBtn')
+
+    if (navUserName && currentUser) {
+        navUserName.textContent = currentUser.displayName || currentUser.email
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            await logoutUser()
+            window.location.href = '../login.html'
+        })
+    }
 })
 
 // ── Cargar ──
@@ -213,9 +229,3 @@ window.deleteCategory = async (id, nombre) => {
         showToast('Error inesperado', 'danger')
     }
 }
-
-// ── Logout ──
-logoutBtn?.addEventListener('click', async () => {
-    await logoutUser()
-    window.location.href = '../login.html'
-})

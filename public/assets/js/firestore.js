@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, getDoc, updateDoc, deleteDoc, doc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+import { collection, addDoc, getDocs, getDoc, getDocFromServer, getDocsFromServer, updateDoc, setDoc, deleteDoc, doc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
 import { db, auth } from "./firebase.js";
 
@@ -10,7 +10,6 @@ export const COLLECTIONS = {
     RENTALS: "rentals"
 };
 
-/* Crear timestamps base */
 function createBaseData() {
     return {
         createdAt: serverTimestamp(),
@@ -20,7 +19,6 @@ function createBaseData() {
     };
 }
 
-/* Actualizar timestamps */
 function updateBaseData() {
     return {
         updatedAt: serverTimestamp()
@@ -30,189 +28,114 @@ function updateBaseData() {
 /* Crear documento */
 export async function createDocument(collectionName, data) {
     try {
-
-        const documentData = {
-            ...data,
-            ...createBaseData()
-        };
-
         const docRef = await addDoc(
             collection(db, collectionName),
-            documentData
+            { ...data, ...createBaseData() }
         );
-
-        return {
-            success: true,
-            id: docRef.id
-        };
-
+        return { success: true, id: docRef.id };
     } catch (error) {
-
         console.error("Error creating document:", error);
-
-        return {
-            success: false,
-            error: error.message
-        };
+        return { success: false, error: error.message };
     }
 }
 
-/* Obtener todos los documentos */
+/* Obtener todos los documentos — siempre desde servidor, sin orderBy para incluir todos */
 export async function getDocuments(collectionName) {
     try {
-
-        const q = query(
-            collection(db, collectionName),
-            orderBy("createdAt", "desc")
-        );
-
-        const querySnapshot = await getDocs(q);
-
+        const querySnapshot = await getDocsFromServer(collection(db, collectionName));
         const documents = [];
-
         querySnapshot.forEach((docItem) => {
-            documents.push({
-                id: docItem.id,
-                ...docItem.data()
-            });
+            documents.push({ id: docItem.id, ...docItem.data() });
         });
-
-        return {
-            success: true,
-            data: documents
-        };
-
+        return { success: true, data: documents };
     } catch (error) {
-
         console.error("Error getting documents:", error);
-
-        return {
-            success: false,
-            error: error.message
-        };
+        return { success: false, error: error.message };
     }
 }
 
 /* Obtener documento por ID */
 export async function getDocumentById(collectionName, id) {
-
     try {
-
         const docRef = doc(db, collectionName, id);
-
         const documentSnapshot = await getDoc(docRef);
-
         if (!documentSnapshot.exists()) {
-            return {
-                success: false,
-                error: "Documento no encontrado"
-            };
+            return { success: false, error: "Documento no encontrado" };
         }
-
-        return {
-            success: true,
-            data: {
-                id: documentSnapshot.id,
-                ...documentSnapshot.data()
-            }
-        };
-
+        return { success: true, data: { id: documentSnapshot.id, ...documentSnapshot.data() } };
     } catch (error) {
-
         console.error(error);
-
-        return {
-            success: false,
-            error: error.message
-        };
+        return { success: false, error: error.message };
     }
 }
 
 /* Actualizar documento */
 export async function updateDocument(collectionName, id, data) {
-
     try {
-
         const docRef = doc(db, collectionName, id);
+        const payload = { ...data, ...updateBaseData() };
 
-        await updateDoc(docRef, {
-            ...data,
-            ...updateBaseData()
-        });
+        try {
+            // updateDoc es más confiable para documentos existentes
+            await updateDoc(docRef, payload);
+        } catch (e) {
+            if (e.code === 'not-found') {
+                // Si no existe, crearlo con setDoc
+                await setDoc(docRef, payload);
+            } else {
+                throw e;
+            }
+        }
 
-        return {
-            success: true
-        };
-
+        return { success: true };
     } catch (error) {
-
-        console.error(error);
-
-        return {
-            success: false,
-            error: error.message
-        };
+        console.error("Error updating document:", error);
+        return { success: false, error: error.message };
     }
 }
 
 /* Eliminar documento */
 export async function deleteDocument(collectionName, id) {
-
     try {
-
         const docRef = doc(db, collectionName, id);
-
         await deleteDoc(docRef);
-
-        return {
-            success: true
-        };
-
+        return { success: true };
     } catch (error) {
-
         console.error(error);
-
-        return {
-            success: false,
-            error: error.message
-        };
+        return { success: false, error: error.message };
     }
 }
 
-/* Obtener vehículos disponibles */
-export async function getAvailableVehicles() {
-
+/* Verificar documento directo del servidor (sin caché) */
+export async function getDocumentFromServer(collectionName, id) {
     try {
+        const docRef = doc(db, collectionName, id);
+        const documentSnapshot = await getDocFromServer(docRef);
+        if (!documentSnapshot.exists()) {
+            return { success: false, error: "Documento no encontrado en servidor" };
+        }
+        return { success: true, data: { id: documentSnapshot.id, ...documentSnapshot.data() } };
+    } catch (error) {
+        console.error(error);
+        return { success: false, error: error.message };
+    }
+}
 
+/* Obtener vehículos disponibles — siempre desde servidor para tener imageUrl actualizado */
+export async function getAvailableVehicles() {
+    try {
         const q = query(
             collection(db, COLLECTIONS.VEHICLES),
-            where("status", "==", "available"),
-            where("active", "==", true)
+            where("status", "==", "available")
         );
-
-        const querySnapshot = await getDocs(q);
-
+        const querySnapshot = await getDocsFromServer(q);
         const vehicles = [];
-
         querySnapshot.forEach((docItem) => {
-            vehicles.push({
-                id: docItem.id,
-                ...docItem.data()
-            });
+            vehicles.push({ id: docItem.id, ...docItem.data() });
         });
-
-        return {
-            success: true,
-            data: vehicles
-        };
-
+        return { success: true, data: vehicles };
     } catch (error) {
-
         console.error(error);
-
-        return {
-            success: false,
-            error: error.message
-        };
+        return { success: false, error: error.message };
     }
 }
