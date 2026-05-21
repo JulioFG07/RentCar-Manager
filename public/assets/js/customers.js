@@ -10,6 +10,15 @@ const emptyState       = document.getElementById('emptyState')
 const tableContainer   = document.getElementById('tableContainer')
 const customersBody    = document.getElementById('customersBody')
 
+// Modal crear (NUEVO)
+const createCustomerForm = document.getElementById('createCustomerForm')
+const createName         = document.getElementById('createName')
+const createEmail        = document.getElementById('createEmail')
+const createPhone        = document.getElementById('createPhone')
+const createLicense      = document.getElementById('createLicense')
+const createAddress      = document.getElementById('createAddress')
+const createCustomerBtn  = document.getElementById('createCustomerBtn')
+
 // Modal editar
 const editCustomerForm = document.getElementById('editCustomerForm')
 const editCustomerId   = document.getElementById('editCustomerId')
@@ -20,14 +29,13 @@ const editLicense      = document.getElementById('editLicense')
 const editAddress      = document.getElementById('editAddress')
 const saveCustomerBtn  = document.getElementById('saveCustomerBtn')
 
+const createModalEl    = document.getElementById('createCustomerModal')
 const editModalEl      = document.getElementById('editCustomerModal')
 const editModal        = editModalEl ? bootstrap.Modal.getOrCreateInstance(editModalEl) : null
 
-// ── Estado local ──
 let allCustomers = []
 let currentUser  = null
 
-// ── Proteger ruta: solo admins ──
 checkAuth(async (user) => {
     if (!user) {
         window.location.href = '../login.html'
@@ -58,7 +66,7 @@ document.addEventListener('navbarLoaded', () => {
 // ── Cargar clientes (usuarios con role: "user") ──
 const loadCustomers = async () => {
     try {
-        const result = await getDocuments(COLLECTIONS.USERS)
+        const result = await getDocuments(COLLECTIONS.CUSTOMERS)
 
         if (!result.success) {
             showAlert('customersAlert', 'Error al cargar los clientes')
@@ -145,11 +153,67 @@ searchInput?.addEventListener('input', () => {
     const filter = searchInput.value.toLowerCase().trim()
 
     const filtered = allCustomers.filter(customer =>
-        (customer.name  || '').toLowerCase().includes(filter) ||
+        (customer.fullName  || '').toLowerCase().includes(filter) ||
         (customer.email || '').toLowerCase().includes(filter)
     )
 
     renderTable(filtered)
+})
+
+
+const isValidLicense = (license) => {
+    return license && license.length >= 6
+}
+
+const validateCreateForm = () => {
+    let valid = true
+    const fields = [
+        [createName,    'El nombre es obligatorio',          !isEmpty(createName.value)],
+        [createEmail,   'Ingresa un correo válido',          isValidEmail(createEmail.value)],
+        [createPhone,   'El teléfono debe tener 10 dígitos', !createPhone.value || isValidPhone(createPhone.value)],
+        [createLicense, 'La licencia debe tener al menos 6 caracteres', !createLicense.value || isValidLicense(createLicense.value)]
+    ]
+    fields.forEach(([el, msg, ok]) => {
+        if (!el) return
+        clearFieldError(el)
+        if (!ok) { setFieldError(el, msg); valid = false }
+    })
+    return valid
+}
+
+createCustomerForm?.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    hideAlert('createAlert')
+
+    if (!validateCreateForm()) return
+
+    try {
+        showButtonLoader(createCustomerBtn, 'Guardando...')
+        
+        const result = await createDocument(COLLECTIONS.CUSTOMERS, {
+            name:          createName.value.trim(),
+            email:         createEmail.value.trim().toLowerCase(),
+            phone:         createPhone.value.trim()   || null,
+            licenseNumber: createLicense.value.trim() || null,
+            address:       createAddress.value.trim() || null,
+        })
+
+        if (!result.success) { 
+            showAlert('createAlert', 'No se pudo registrar el cliente')
+            return 
+        }
+
+        showToast('Cliente registrado correctamente', 'success')
+        createCustomerForm.reset()
+        createModal?.hide()
+        await loadCustomers()
+
+    } catch (err) {
+        showAlert('createAlert', 'Error inesperado')
+        console.error(err)
+    } finally {
+        hideButtonLoader(createCustomerBtn)
+    }
 })
 
 // ── Abrir modal editar ──
@@ -161,7 +225,7 @@ window.openEditModal = (customerId) => {
     hideAlert('editSuccess')
 
     editCustomerId.value = customer.id
-    editName.value       = customer.name          || ''
+    editName.value       = customer.fullName          || ''
     editEmail.value      = customer.email         || ''
     editPhone.value      = customer.phone         || ''
     editLicense.value    = customer.licenseNumber || ''
@@ -177,12 +241,12 @@ editCustomerForm?.addEventListener('submit', async (e) => {
     hideAlert('editAlert')
     hideAlert('editSuccess')
 
-    const name    = editName.value.trim()
+    const fullNname    = editName.value.trim()
     const phone   = editPhone.value.trim()
     const license = editLicense.value.trim()
     const address = editAddress.value.trim()
 
-    if (isEmpty(name)) {
+    if (isEmpty(fullName)) {
         showAlert('editAlert', 'El nombre es obligatorio')
         return
     }
@@ -191,10 +255,10 @@ editCustomerForm?.addEventListener('submit', async (e) => {
         showButtonLoader(saveCustomerBtn, 'Guardando...')
 
         const result = await updateDocument(
-            COLLECTIONS.USERS,
+            COLLECTIONS.CUSTOMERS,
             editCustomerId.value,
             {
-                name,
+                fullName,
                 phone:         phone   || null,
                 licenseNumber: license || null,
                 address:       address || null
@@ -210,7 +274,7 @@ editCustomerForm?.addEventListener('submit', async (e) => {
         if (index !== -1) {
             allCustomers[index] = {
                 ...allCustomers[index],
-                name,
+                fullName,
                 phone:         phone   || null,
                 licenseNumber: license || null,
                 address:       address || null

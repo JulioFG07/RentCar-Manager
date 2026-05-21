@@ -12,9 +12,11 @@ let isProcessing   = false
 checkAuth(async (user) => {
 
     if (isProcessing) return
+
     isProcessing = true
 
     if (!user) {
+
         window.location.href = './login.html'
         return
     }
@@ -22,7 +24,12 @@ checkAuth(async (user) => {
     currentUser = user
 
     try {
-        const result = await getDocuments(COLLECTIONS.USERS)
+
+        // USERS → auth/login/roles
+
+        const result = await getDocuments(
+            COLLECTIONS.USERS
+        )
 
         if (!result.success) {
             document.getElementById('loadingState').innerHTML =
@@ -30,7 +37,9 @@ checkAuth(async (user) => {
             return
         }
 
-        const profile = result.data.find(u => u.uid === user.uid)
+        const profile = result.data.find(
+            u => u.uid === user.uid
+        )
 
         if (!profile) {
             document.getElementById('loadingState').innerHTML =
@@ -40,15 +49,40 @@ checkAuth(async (user) => {
 
         currentProfile = profile
 
+        // ─────────────────────────────
+        // REDIRECCIÓN ADMIN
+        // ─────────────────────────────
+        console.log(profile.role)
         if (profile.role === 'admin') {
-            window.location.href = './modules/customers.html'
+
+            window.location.href =
+                './modules/customers.html'
+
             return
         }
 
-        renderUserDashboard(user, profile)
+        // ─────────────────────────────
+        // DASHBOARD GENERAL
+        // ─────────────────────────────
+
+        navUserName.textContent =
+            profile.fullName ||
+            profile.name ||
+            user.email
+
+        await loadFullDashboard()
+
+        loadingState.classList.add('d-none')
 
     } catch (error) {
+
         console.error(error)
+
+        loadingState.innerHTML = `
+            <p class="text-danger">
+                Error al cargar dashboard
+            </p>
+        `
     }
 })
 

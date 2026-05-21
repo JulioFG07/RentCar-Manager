@@ -77,76 +77,6 @@ document.addEventListener('navbarLoaded', () => {
 
 /* ======================================================
    IMAGEN — preview local
-====================================================== */
-
-const showPreview = (file, previewEl, previewImg, dropZone) => {
-    const url = URL.createObjectURL(file)
-    previewImg.src = url
-    previewEl.classList.remove('d-none')
-    dropZone?.classList.add('d-none')
-}
-
-// Crear
-const handleCreateImage = (file) => {
-    if (!file.type.startsWith('image/')) { showAlert('createAlert', 'El archivo debe ser una imagen'); return }
-    createImageFile = file
-    showPreview(file, createPreviewEl, createPreviewImg, createDropZone)
-}
-createImageInput?.addEventListener('change', (e) => { if (e.target.files[0]) handleCreateImage(e.target.files[0]) })
-createDropZone?.addEventListener('dragover',  (e) => { e.preventDefault(); createDropZone.style.borderColor = '#0d6efd' })
-createDropZone?.addEventListener('dragleave', ()  => { createDropZone.style.borderColor = '' })
-createDropZone?.addEventListener('drop', (e) => {
-    e.preventDefault(); createDropZone.style.borderColor = ''
-    const file = e.dataTransfer.files[0]
-    if (file) handleCreateImage(file)
-})
-createRemoveBtn?.addEventListener('click', () => {
-    createImageFile = null
-    createImageInput.value = ''
-    createPreviewEl.classList.add('d-none')
-    createDropZone.classList.remove('d-none')
-})
-createModalEl?.addEventListener('hidden.bs.modal', () => {
-    createImageFile = null
-    createImageInput.value = ''
-    createPreviewEl?.classList.add('d-none')
-    createDropZone?.classList.remove('d-none')
-})
-
-// Editar
-const handleEditImage = (file) => {
-    if (!file.type.startsWith('image/')) { showAlert('editAlert', 'El archivo debe ser una imagen'); return }
-    editImageFile = file
-    showPreview(file, editPreviewEl, editPreviewImg, null)
-}
-editImageInput?.addEventListener('change', (e) => { if (e.target.files[0]) handleEditImage(e.target.files[0]) })
-editDropZone?.addEventListener('dragover',  (e) => { e.preventDefault(); editDropZone.style.borderColor = '#0d6efd' })
-editDropZone?.addEventListener('dragleave', ()  => { editDropZone.style.borderColor = '' })
-editDropZone?.addEventListener('drop', (e) => {
-    e.preventDefault(); editDropZone.style.borderColor = ''
-    const file = e.dataTransfer.files[0]
-    if (file) handleEditImage(file)
-})
-editRemoveBtn?.addEventListener('click', () => {
-    editRemoveImage = true
-    editCurrentImg.classList.add('d-none')
-})
-editCancelNewBtn?.addEventListener('click', () => {
-    editImageFile = null
-    editImageInput.value = ''
-    editPreviewEl.classList.add('d-none')
-})
-editModalEl?.addEventListener('hidden.bs.modal', () => {
-    editImageFile   = null
-    editRemoveImage = false
-    editImageInput.value = ''
-    editPreviewEl?.classList.add('d-none')
-})
-
-/* ======================================================
-   CATEGORÍAS Y VEHÍCULOS
-====================================================== */
-
 const loadCategories = async () => {
     const result = await getDocuments(COLLECTIONS.VEHICLE_CATEGORIES)
     if (!result.success) return
@@ -243,10 +173,6 @@ filterStatus?.addEventListener('change', applyFilters)
 
 /* ======================================================
    VALIDACIÓN
-====================================================== */
-
-const isValidPlate = (plate) =>
-    plate && plate.length >= 5 && plate.length <= 10 && /^[A-Z0-9-]+$/.test(plate.toUpperCase())
 
 const validateVehicleForm = (brand, model, year, plate, categoryId, price) => {
     let valid = true
@@ -268,15 +194,6 @@ const validateVehicleForm = (brand, model, year, plate, categoryId, price) => {
 
 /* ======================================================
    CREAR
-====================================================== */
-
-createForm?.addEventListener('submit', async (e) => {
-    e.preventDefault()
-    hideAlert('createAlert')
-    if (!validateVehicleForm(createBrand, createModel, createYear, createPlate, createCategory, createPrice)) return
-    try {
-        showButtonLoader(createBtn, 'Guardando...')
-
         const result = await createDocument(COLLECTIONS.VEHICLES, {
             brand:      createBrand.value.trim(),
             model:      createModel.value.trim(),
@@ -312,8 +229,6 @@ createForm?.addEventListener('submit', async (e) => {
 
 /* ======================================================
    EDITAR
-====================================================== */
-
 window.openEditVehicle = (id) => {
     const v = allVehicles.find(x => x.id === id)
     if (!v) return
@@ -404,13 +319,6 @@ editForm?.addEventListener('submit', async (e) => {
 
 /* ======================================================
    ELIMINAR
-====================================================== */
-
-window.deleteVehicle = async (id, nombre) => {
-    if (!confirm(`¿Eliminar "${nombre}"?\nEsta acción no se puede deshacer.`)) return
-    try {
-        const vehicle = allVehicles.find(v => v.id === id)
-        if (vehicle?.imageUrl) await deleteVehicleImage(vehicle.imageUrl)
         const result = await deleteDocument(COLLECTIONS.VEHICLES, id)
         if (!result.success) { showToast('No se pudo eliminar', 'danger'); return }
         allVehicles = allVehicles.filter(v => v.id !== id)
