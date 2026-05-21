@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RentCar Manager | Mi Perfil</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="./assets/css/styles.css">
+  <script src="./assets/js/navbar-user.js" defer></script>
+</head>
+<body class="dashboard-page">
+
+  <!-- Estado de carga inicial -->
+  <div id="loadingState" class="text-center py-5 vh-100 d-flex flex-column justify-content-center align-items-center bg-white position-fixed w-100 z-3">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="text-secondary mt-3 fw-medium">Cargando tu perfil...</p>
+  </div>
+
+  <!-- NAVBAR -->
+  <div id="navbarContainer"></div>
+
+  <main class="py-5">
+    <div class="container" style="max-width: 860px;">
+
+      <!-- Encabezado -->
+      <div class="mb-4">
+        <h2 class="fw-bold mb-1">
+          <i class="bi bi-person-circle text-primary me-2"></i>Mi Perfil
+        </h2>
+        <p class="text-secondary mb-0">Tu información personal y resumen de actividad</p>
+      </div>
+
+      <div id="profileAlert" class="alert alert-danger d-none" role="alert"></div>
+
+      <!-- ── STATS ── -->
+      <div class="row g-3 mb-4">
+
+        <div class="col-md-3 col-sm-6">
+          <div class="card border-0 shadow-sm h-100 p-3 d-flex flex-row align-items-center">
+            <div class="bg-success bg-opacity-10 text-success p-2 rounded-circle me-3">
+              <i class="bi bi-check-circle-fill fs-4"></i>
+            </div>
+            <div>
+              <h4 class="fw-bold mb-0" id="statAvailable">-</h4>
+              <span class="text-secondary small" style="font-size:0.8rem;">Vehículos Disponibles</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <div class="card border-0 shadow-sm h-100 p-3 d-flex flex-row align-items-center">
+            <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle me-3">
+              <i class="bi bi-car-front-fill fs-4"></i>
+            </div>
+            <div>
+              <h4 class="fw-bold mb-0" id="statActiveRentals">-</h4>
+              <span class="text-secondary small" style="font-size:0.8rem;">Rentas Activas</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <div class="card border-0 shadow-sm h-100 p-3 d-flex flex-row align-items-center">
+            <div class="bg-info bg-opacity-10 text-info p-2 rounded-circle me-3">
+              <i class="bi bi-journal-bookmark-fill fs-4"></i>
+            </div>
+            <div>
+              <h4 class="fw-bold mb-0" id="statTotalRentals">-</h4>
+              <span class="text-secondary small" style="font-size:0.8rem;">Total de Rentas</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <div class="card border-0 shadow-sm h-100 p-3 d-flex flex-row align-items-center" style="background: var(--primary-gradient);">
+            <div class="bg-white bg-opacity-25 text-white p-2 rounded-circle me-3">
+              <i class="bi bi-currency-dollar fs-4"></i>
+            </div>
+            <div class="text-white">
+              <h4 class="fw-bold mb-0" id="statTotalSpent">$-</h4>
+              <span class="text-white-50 small" style="font-size:0.8rem;">Total Gastado</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── HISTORIAL ── -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0">
+            <i class="bi bi-clock-history text-primary me-2"></i>Mis Rentas Recientes
+          </h5>
+          <div class="d-flex gap-2">
+            <button id="refreshHistoryBtn" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+            </button>
+            <a href="./modules/rentals.html" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-car-front me-1"></i>Rentar vehículo
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-0 mt-3">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Fecha</th>
+                  <th>Vehículo</th>
+                  <th>Inicio</th>
+                  <th>Fin</th>
+                  <th>Estado</th>
+                  <th class="text-end pe-4">Monto</th>
+                </tr>
+              </thead>
+              <tbody id="historyBody">
+                <tr>
+                  <td colspan="6" class="text-center py-4 text-muted">Cargando historial...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DATOS PERSONALES ── -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+
+          <!-- Header con botón editar -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h5 class="fw-bold mb-1">
+                <i class="bi bi-person-gear text-primary me-2"></i>Datos personales
+              </h5>
+              <p class="text-secondary small mb-0">Tu información de cuenta y contacto</p>
+            </div>
+            <button id="toggleEditBtn" class="btn btn-outline-primary">
+              <i class="bi bi-pencil me-2"></i>Editar perfil
+            </button>
+          </div>
+
+          <!-- Vista de solo lectura -->
+          <div id="profileViewMode">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label text-secondary small fw-medium">Nombre completo</label>
+                <p class="fw-semibold mb-0" id="viewName">—</p>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-secondary small fw-medium">Correo electrónico</label>
+                <p class="fw-semibold mb-0" id="viewEmail">—</p>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-secondary small fw-medium">Teléfono</label>
+                <p class="fw-semibold mb-0" id="viewPhone">—</p>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-secondary small fw-medium">Número de licencia</label>
+                <p class="fw-semibold mb-0" id="viewLicense">—</p>
+              </div>
+              <div class="col-12">
+                <label class="form-label text-secondary small fw-medium">Dirección</label>
+                <p class="fw-semibold mb-0" id="viewAddress">—</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulario de edición (oculto por defecto) -->
+          <div id="profileEditMode" class="d-none">
+            <form id="profileForm" novalidate>
+              <div class="mb-3">
+                <label class="form-label fw-medium">Nombre completo</label>
+                <input type="text" class="form-control form-control-lg" id="profileName" placeholder="Tu nombre completo">
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-medium">Correo electrónico</label>
+                <input type="email" class="form-control form-control-lg bg-light" id="profileEmail" readonly>
+                <div class="form-text">El correo electrónico no se puede modificar.</div>
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-medium">Teléfono</label>
+                  <input type="text" class="form-control form-control-lg" id="profilePhone" placeholder="10 dígitos">
+                  <div class="invalid-feedback"></div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-medium">Número de licencia</label>
+                  <input type="text" class="form-control form-control-lg" id="profileLicense" placeholder="Al menos 6 caracteres">
+                  <div class="invalid-feedback"></div>
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-medium">Dirección residencial</label>
+                <input type="text" class="form-control form-control-lg" id="profileAddress" placeholder="Calle, ciudad, estado">
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="submit" id="saveProfileBtn" class="btn btn-primary btn-lg fw-semibold flex-grow-1">
+                  <i class="bi bi-check-circle me-2"></i>Guardar cambios
+                </button>
+                <button type="button" id="cancelEditBtn" class="btn btn-outline-secondary btn-lg">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="./assets/js/profile.js"></script>
+
+  <!-- Toggle editar perfil -->
+  <script>
+    const toggleEditBtn = document.getElementById('toggleEditBtn')
+    const cancelEditBtn = document.getElementById('cancelEditBtn')
+    const profileViewMode = document.getElementById('profileViewMode')
+    const profileEditMode = document.getElementById('profileEditMode')
+
+    toggleEditBtn?.addEventListener('click', () => {
+      profileViewMode.classList.add('d-none')
+      profileEditMode.classList.remove('d-none')
+      toggleEditBtn.classList.add('d-none')
+    })
+
+    cancelEditBtn?.addEventListener('click', () => {
+      profileViewMode.classList.remove('d-none')
+      profileEditMode.classList.add('d-none')
+      toggleEditBtn.classList.remove('d-none')
+    })
+  </script>
+</body>
+</html>
