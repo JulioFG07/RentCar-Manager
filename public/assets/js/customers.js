@@ -1,11 +1,9 @@
-import { checkAuth, logoutUser, getCurrentUser } from './auth.js'
-import { getDocuments, updateDocument, deleteDocument, COLLECTIONS } from './firestore.js'
+import { checkAuth, logoutUser } from './auth.js'
+import { getDocuments, updateDocument, COLLECTIONS } from './firestore.js'
 import { showAlert, hideAlert, showToast, showButtonLoader, hideButtonLoader } from './ui.js'
-import { isEmpty, isValidEmail } from './validators.js'
+import { isEmpty, isValidPhone, setFieldError, clearFieldError } from './validators.js'
 
 // ── Referencias DOM ──
-const navUserName      = document.getElementById('navUserName')
-const logoutBtn        = document.getElementById('logoutBtn')
 const searchInput      = document.getElementById('searchInput')
 const loadingState     = document.getElementById('loadingState')
 const emptyState       = document.getElementById('emptyState')
@@ -23,12 +21,11 @@ const editAddress      = document.getElementById('editAddress')
 const saveCustomerBtn  = document.getElementById('saveCustomerBtn')
 
 const editModalEl      = document.getElementById('editCustomerModal')
-const editModal        = editModalEl
-    ? bootstrap.Modal.getOrCreateInstance(editModalEl)
-    : null
+const editModal        = editModalEl ? bootstrap.Modal.getOrCreateInstance(editModalEl) : null
 
 // ── Estado local ──
 let allCustomers = []
+let currentUser  = null
 
 // ── Proteger ruta: solo admins ──
 checkAuth(async (user) => {
@@ -37,8 +34,25 @@ checkAuth(async (user) => {
         return
     }
 
-    navUserName.textContent = user.displayName || user.email
+    currentUser = user
     await loadCustomers()
+})
+
+// ── Inicializar navbar cuando esté cargado ──
+document.addEventListener('navbarLoaded', () => {
+    const navUserName = document.getElementById('navUserName')
+    const logoutBtn   = document.getElementById('logoutBtn')
+
+    if (navUserName && currentUser) {
+        navUserName.textContent = currentUser.displayName || currentUser.email
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            await logoutUser()
+            window.location.href = '../login.html'
+        })
+    }
 })
 
 // ── Cargar clientes (usuarios con role: "user") ──
@@ -52,7 +66,6 @@ const loadCustomers = async () => {
             return
         }
 
-        // Filtrar solo los que tienen role "user"
         allCustomers = result.data.filter(u => u.role === 'user')
 
         loadingState.classList.add('d-none')
@@ -76,33 +89,55 @@ const renderTable = (customers) => {
     emptyState.classList.add('d-none')
     tableContainer.classList.remove('d-none')
 
-    customersBody.innerHTML = customers.map(customer => `
-        <tr>
-            <td class="ps-4 fw-semibold">${customer.name || '—'}</td>
-            <td class="text-secondary">${customer.email || '—'}</td>
-            <td>${customer.phone || '<span class="text-muted fst-italic small">Sin datos</span>'}</td>
-            <td>${customer.licenseNumber || '<span class="text-muted fst-italic small">Sin datos</span>'}</td>
-            <td>${customer.address || '<span class="text-muted fst-italic small">Sin datos</span>'}</td>
-            <td class="text-end pe-4">
-                <div class="d-flex justify-content-end gap-2">
-                    <button
-                        class="btn btn-outline-primary btn-sm"
-                        onclick="openEditModal('${customer.id}')"
-                        title="Editar"
-                    >
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button
-                        class="btn btn-outline-danger btn-sm"
-                        onclick="deleteCustomer('${customer.id}', '${customer.name || 'este cliente'}')"
-                        title="Eliminar"
-                    >
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('')
+    customersBody.innerHTML = customers.map(customer => {
+
+        const isActive = customer.active !== false
+
+        const activeBadge = isActive
+            ? `<span class="badge bg-success">Activo</span>`
+            : `<span class="badge bg-secondary">Inactivo</span>`
+
+        const actionBtn = isActive
+            ? `<button
+                class="btn btn-outline-danger btn-sm"
+                onclick="deleteCustomer('${customer.id}', '${customer.name || 'este cliente'}')"
+                title="Eliminar cliente"
+               >
+                   <i class="bi bi-trash"></i>
+               </button>`
+            : `<button
+                class="btn btn-outline-success btn-sm"
+                onclick="restoreCustomer('${customer.id}', '${customer.name || 'este cliente'}')"
+                title="Restaurar cliente"
+               >
+                   <i class="bi bi-arrow-counterclockwise"></i>
+               </button>`
+
+        return `
+            <tr class="${isActive ? '' : 'table-secondary opacity-75'}">
+                <td class="ps-4 fw-semibold">
+                    ${customer.name || '—'}
+                    <div class="mt-1">${activeBadge}</div>
+                </td>
+                <td class="text-secondary">${customer.email || '—'}</td>
+                <td>${customer.phone         || '<span class="text-muted fst-italic small">Sin datos</span>'}</td>
+                <td>${customer.licenseNumber || '<span class="text-muted fst-italic small">Sin datos</span>'}</td>
+                <td>${customer.address       || '<span class="text-muted fst-italic small">Sin datos</span>'}</td>
+                <td class="text-end pe-4">
+                    <div class="d-flex justify-content-end gap-2">
+                        <button
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="openEditModal('${customer.id}')"
+                            title="Editar"
+                        >
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        ${actionBtn}
+                    </div>
+                </td>
+            </tr>
+        `
+    }).join('')
 }
 
 // ── Buscador ──
@@ -171,7 +206,6 @@ editCustomerForm?.addEventListener('submit', async (e) => {
             return
         }
 
-        // Actualizar lista local
         const index = allCustomers.findIndex(c => c.id === editCustomerId.value)
         if (index !== -1) {
             allCustomers[index] = {
@@ -198,23 +232,30 @@ editCustomerForm?.addEventListener('submit', async (e) => {
     }
 })
 
-// ── Eliminar cliente ──
+// ── Eliminar cliente (eliminación lógica) ──
 window.deleteCustomer = async (customerId, customerName) => {
-    const confirmed = confirm(`¿Estás seguro de que deseas eliminar a "${customerName}"?\nEsta acción no se puede deshacer.`)
+    const confirmed = confirm(`¿Estás seguro de que deseas eliminar a "${customerName}"?`)
     if (!confirmed) return
 
     try {
-        const result = await deleteDocument(COLLECTIONS.USERS, customerId)
+        const result = await updateDocument(
+            COLLECTIONS.USERS,
+            customerId,
+            { active: false }
+        )
 
         if (!result.success) {
             showToast('No se pudo eliminar el cliente', 'danger')
             return
         }
 
-        // Remover de la lista local
-        allCustomers = allCustomers.filter(c => c.id !== customerId)
+        const index = allCustomers.findIndex(c => c.id === customerId)
+        if (index !== -1) {
+            allCustomers[index] = { ...allCustomers[index], active: false }
+        }
+
         renderTable(allCustomers)
-        showToast(`"${customerName}" eliminado correctamente`, 'success')
+        showToast(`"${customerName}" eliminado correctamente`, 'warning')
 
     } catch (error) {
         showToast('Ocurrió un error inesperado', 'danger')
@@ -222,8 +263,33 @@ window.deleteCustomer = async (customerId, customerName) => {
     }
 }
 
-// ── Logout ──
-logoutBtn?.addEventListener('click', async () => {
-    await logoutUser()
-    window.location.href = '../login.html'
-})
+// ── Restaurar cliente ──
+window.restoreCustomer = async (customerId, customerName) => {
+    const confirmed = confirm(`¿Deseas restaurar a "${customerName}"?`)
+    if (!confirmed) return
+
+    try {
+        const result = await updateDocument(
+            COLLECTIONS.USERS,
+            customerId,
+            { active: true }
+        )
+
+        if (!result.success) {
+            showToast('No se pudo restaurar el cliente', 'danger')
+            return
+        }
+
+        const index = allCustomers.findIndex(c => c.id === customerId)
+        if (index !== -1) {
+            allCustomers[index] = { ...allCustomers[index], active: true }
+        }
+
+        renderTable(allCustomers)
+        showToast(`"${customerName}" restaurado correctamente`, 'success')
+
+    } catch (error) {
+        showToast('Ocurrió un error inesperado', 'danger')
+        console.error(error)
+    }
+}
