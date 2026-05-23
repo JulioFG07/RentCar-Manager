@@ -128,3 +128,262 @@ body.vh-100 {
 .bi-car-front-fill, .bi-person-plus-fill {
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
 }
+
+/* =========================================================
+   8. DASHBOARD
+========================================================= */
+
+body.dashboard-page{
+    background-color: var(--light-bg);
+}
+
+/* Loading */
+
+.loading-screen{
+    position: fixed;
+    inset: 0;
+
+    z-index: 9999;
+
+    background: var(--light-bg);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+/* Hero */
+
+.dashboard-hero{
+    padding-top: 120px;
+    padding-bottom: 3rem;
+}
+
+.hero-card{
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-card::before{
+    content: '';
+
+    position: absolute;
+    inset: 0;
+
+    background:
+        radial-gradient(circle at top right,
+        rgba(37, 99, 235, 0.06),
+        transparent 35%),
+
+        radial-gradient(circle at bottom left,
+        rgba(16, 185, 129, 0.05),
+        transparent 30%);
+}
+
+.hero-badge{
+    position: relative;
+
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+
+    background: rgba(37, 99, 235, 0.08);
+
+    color: #2563eb;
+
+    padding: .45rem 1rem;
+
+    border-radius: 100px;
+
+    font-size: .85rem;
+    font-weight: 600;
+
+    margin-bottom: 1rem;
+}
+
+.hero-label{
+    position: relative;
+    color: var(--slate-gray);
+    margin-bottom: .5rem;
+}
+
+.welcome-name{
+    position: relative;
+
+    font-size: clamp(2.5rem, 5vw, 4rem);
+
+    font-weight: 800;
+
+    color: var(--dark-navy);
+
+    margin-bottom: 1rem;
+}
+
+.hero-description{
+    position: relative;
+
+    color: var(--slate-gray);
+
+    font-size: 1.05rem;
+
+    line-height: 1.8;
+
+    max-width: 650px;
+
+    margin-bottom: 2rem;
+}
+
+.hero-icon-wrapper{
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-glow{
+    position: absolute;
+
+    width: 260px;
+    height: 260px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(circle,
+        rgba(37,99,235,.12) 0%,
+        transparent 70%);
+}
+
+.hero-icon{
+    position: relative;
+
+    font-size: 8rem;
+
+    color: rgba(37,99,235,.15);
+}
+
+/* Stats */
+
+.stats-section{
+    padding-bottom: 3rem;
+}
+
+.stat-card{
+    height: 100%;
+}
+
+.stat-icon{
+    width: 64px;
+    height: 64px;
+
+    border-radius: 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 1.4rem;
+
+    flex-shrink: 0;
+}
+
+.stat-icon.blue{
+    background: rgba(37,99,235,.1);
+    color: #2563eb;
+}
+
+.stat-icon.green{
+    background: rgba(16,185,129,.1);
+    color: #10b981;
+}
+
+.stat-icon.gold{
+    background: rgba(245,158,11,.1);
+    color: #f59e0b;
+}
+
+.stat-label{
+    color: var(--slate-gray);
+    margin-bottom: .25rem;
+}
+
+.stat-number{
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+/* Quick Actions */
+
+.quick-actions{
+    padding-bottom: 5rem;
+}
+
+.section-header{
+    margin-bottom: 2rem;
+}
+
+.section-header h2{
+    font-weight: 800;
+    margin-bottom: .5rem;
+}
+
+.section-header p{
+    color: var(--slate-gray);
+}
+
+.action-card{
+    transition: all .2s ease;
+}
+
+.action-card:hover{
+    transform: translateY(-4px);
+}
+
+.action-card i{
+    font-size: 2rem;
+
+    color: #2563eb;
+
+    margin-bottom: 1rem;
+
+    display: inline-block;
+}
+
+.action-card h4{
+    font-weight: 700;
+    margin-bottom: .75rem;
+    color: var(--dark-navy);
+}
+
+.action-card p{
+    color: var(--slate-gray);
+    margin: 0;
+}
+
+/* Logout */
+
+.logout-card{
+    border-color: #fecaca !important;
+    background: #fff5f5;
+}
+
+.logout-card i{
+    color: #ef4444;
+}
+
+/* Responsive */
+
+@media(max-width:768px){
+
+    .dashboard-hero{
+        padding-top: 100px;
+    }
+
+    .welcome-name{
+        font-size: 2.5rem;
+    }
+
+}
