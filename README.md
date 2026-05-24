@@ -49,28 +49,43 @@ Desarrollar una aplicación web funcional que permita:
 rentcar-manager/
 │
 ├── public/
+│   ├── admin-register.html
+│   ├── dashboard.html
 │   ├── index.html
 │   ├── login.html
+│   ├── profile.html
 │   ├── register.html
-│   ├── dashboard.html
 │   │
 │   ├── modules/
-│   │   ├── vehicles.html
 │   │   ├── customers.html
 │   │   ├── rentals.html
-│   │   └── vehicles-categories.html
+│   │   ├── vehicles-categories.html
+│   │   └── vehicles.html
 │   │
 │   └── assets/
 │       ├── css/
 │       │   └── styles.css
 │       │
 │       └── js/
+│           ├── admin-register.js
+│           ├── auth.js
+│           ├── customers.js
+│           ├── dashboard.js
+│           ├── data.js
 │           ├── firebase.js
 │           ├── firestore.js
-│           ├── auth.js
-│           ├── validators.js
+│           ├── login.js
+│           ├── main.js
+│           ├── navbar-user.js
+│           ├── navbar.js
+│           ├── profile.js
+│           ├── register.js
+│           ├── rentals.js
+│           ├── storage.js
 │           ├── ui.js
-│           └── main.js
+│           ├── validators.js
+│           ├── vehicles-categories.js
+│           └── vehicles.js
 │
 ├── README.md
 └── .gitignore
