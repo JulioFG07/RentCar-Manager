@@ -11,21 +11,22 @@ const loadingState   = document.getElementById('loadingState')
 const emptyState     = document.getElementById('emptyState')
 const vehiclesGrid   = document.getElementById('vehiclesGrid')
 
-// Modal crear — campos base
-const createForm         = document.getElementById('createVehicleForm')
-const createBrand        = document.getElementById('createBrand')
-const createModel        = document.getElementById('createModel')
-const createYear         = document.getElementById('createYear')
-const createPlate        = document.getElementById('createPlate')
-const createCategory     = document.getElementById('createCategory')
-const createPrice        = document.getElementById('createDailyPrice')
-const createBtn          = document.getElementById('createVehicleBtn')
-const createImageInput   = document.getElementById('createImage')
-const createPreviewEl    = document.getElementById('createImagePreview')
-const createPreviewImg   = createPreviewEl?.querySelector('img')
-const createDropZone     = document.getElementById('createDropZone')
-const createRemoveBtn    = document.getElementById('createRemoveImg')
-// Modal crear — campos extra (compañero)
+// Modal crear
+const createForm        = document.getElementById('createVehicleForm')
+const createBrand       = document.getElementById('createBrand')
+const createModel       = document.getElementById('createModel')
+const createYear        = document.getElementById('createYear')
+const createPlate       = document.getElementById('createPlate')
+const createCategory    = document.getElementById('createCategory')
+const createPrice       = document.getElementById('createDailyPrice')
+const createBtn         = document.getElementById('createVehicleBtn')
+const createImageInput  = document.getElementById('createImage')
+const createPreviewEl   = document.getElementById('createImagePreview')
+const createPreviewImg  = createPreviewEl?.querySelector('img')
+const createDropZone    = document.getElementById('createDropZone')
+const createRemoveBtn   = document.getElementById('createRemoveImg')
+
+// Campos extra
 const createTransmission = document.getElementById('createTransmission')
 const createFuel         = document.getElementById('createFuel')
 const createPassengers   = document.getElementById('createPassengers')
@@ -34,7 +35,7 @@ const createFuelPolicy   = document.getElementById('createFuelPolicy')
 const createLargeBags    = document.getElementById('createLargeBags')
 const createSmallBags    = document.getElementById('createSmallBags')
 
-// Modal editar — campos base
+// Modal editar
 const editForm          = document.getElementById('editVehicleForm')
 const editId            = document.getElementById('editVehicleId')
 const editBrand         = document.getElementById('editBrand')
@@ -53,7 +54,7 @@ const editPreviewEl     = document.getElementById('editImagePreview')
 const editPreviewImg    = editPreviewEl?.querySelector('img')
 const editCancelNewBtn  = document.getElementById('editCancelNewImg')
 const editDropZone      = document.getElementById('editDropZone')
-// Modal editar — campos extra (compañero)
+// Campos extra (compañero)
 const editTransmission  = document.getElementById('editTransmission')
 const editFuel          = document.getElementById('editFuel')
 const editPassengers    = document.getElementById('editPassengers')
@@ -105,7 +106,7 @@ const showPreview = (file, previewEl, previewImg, dropZone) => {
     dropZone?.classList.add('d-none')
 }
 
-// Crear
+
 const handleCreateImage = (file) => {
     if (!file.type.startsWith('image/')) { showAlert('createAlert', 'El archivo debe ser una imagen'); return }
     createImageFile = file
@@ -222,49 +223,71 @@ const renderGrid = (vehicles) => {
         emptyState.classList.remove('d-none')
         return
     }
+
     emptyState.classList.add('d-none')
     vehiclesGrid.classList.remove('d-none')
 
     vehiclesGrid.innerHTML = vehicles.map(v => {
+
         const { color, label } = statusConfig(v.status)
 
         const imgHtml = v.imageUrl
             ? `<img src="${v.imageUrl}" class="card-img-top" alt="${v.brand} ${v.model}">`
-            : `<div class="no-img"><i class="bi bi-car-front text-secondary" style="font-size:3rem"></i></div>`
+            : `<div class="no-img">
+                   <i class="bi bi-car-front text-secondary" style="font-size:3rem"></i>
+               </div>`
 
         return `
             <div class="col-sm-6 col-lg-4 col-xl-3">
                 <div class="card vehicle-admin-card h-100 shadow-sm">
+
                     ${imgHtml}
+
                     <div class="card-body p-3 d-flex flex-column gap-2">
+
+                        <!-- Nombre + precio -->
                         <div class="d-flex justify-content-between align-items-start gap-2">
                             <div>
                                 <h6 class="fw-bold mb-0">${v.brand} ${v.model}</h6>
                                 <small class="text-secondary">${v.year} · ${v.plate}</small>
-                                ${v.transmission ? `<br><small class="text-secondary">${v.transmission} · ${v.fuel || 'Gasolina'}</small>` : ''}
                             </div>
                             <span class="price-tag flex-shrink-0">
                                 $${Number(v.dailyPrice).toFixed(2)}
                                 <span style="font-weight:400;font-size:.75rem">/día</span>
                             </span>
                         </div>
+
+                        <!-- Categoría + estado -->
                         <div class="d-flex flex-wrap gap-2 align-items-center">
                             <span class="badge bg-light text-secondary border">
                                 <i class="bi bi-tag me-1"></i>${getCategoryName(v.categoryId)}
                             </span>
                             <span class="badge bg-${color} status-pill">${label}</span>
                         </div>
+
                     </div>
+
+                    <!-- Acciones -->
                     <div class="card-actions">
-                        <button class="btn btn-outline-primary btn-sm flex-grow-1" onclick="openEditVehicle('${v.id}')" title="Editar">
+                        <button
+                            class="btn btn-outline-primary btn-sm flex-grow-1"
+                            onclick="openEditVehicle('${v.id}')"
+                            title="Editar"
+                        >
                             <i class="bi bi-pencil me-1"></i>Editar
                         </button>
-                        <button class="btn btn-outline-danger btn-sm flex-grow-1" onclick="deleteVehicle('${v.id}', '${v.brand} ${v.model}')" title="Eliminar">
+                        <button
+                            class="btn btn-outline-danger btn-sm flex-grow-1"
+                            onclick="deleteVehicle('${v.id}', '${v.brand} ${v.model}')"
+                            title="Eliminar"
+                        >
                             <i class="bi bi-trash me-1"></i>Eliminar
                         </button>
                     </div>
+
                 </div>
-            </div>`
+            </div>
+        `
     }).join('')
 }
 
@@ -321,7 +344,6 @@ createForm?.addEventListener('submit', async (e) => {
     try {
         showButtonLoader(createBtn, 'Guardando...')
 
-        // Campos extra del compañero
         const transmissionVal = createTransmission?.value || 'Automática'
         const fuelVal         = createFuel?.value         || 'Gasolina'
         const passengersVal   = createPassengers?.value   ? Number(createPassengers.value) : 5
@@ -389,7 +411,7 @@ window.openEditVehicle = (id) => {
     editStatus.value   = v.status     || 'available'
     if (editCategory) editCategory.value = v.categoryId || ''
 
-    // Campos extra del compañero
+    // Campos extra (compañero)
     if (editTransmission) editTransmission.value = v.transmission || 'Automática'
     if (editFuel)         editFuel.value         = v.fuel         || 'Gasolina'
     if (editPassengers)   editPassengers.value   = v.passengers   || 5
@@ -437,7 +459,7 @@ editForm?.addEventListener('submit', async (e) => {
             imageUrl = null
         }
 
-        // Campos extra del compañero
+        // Campos extra (compañero)
         const transmissionVal = editTransmission?.value || 'Automática'
         const fuelVal         = editFuel?.value         || 'Gasolina'
         const passengersVal   = editPassengers?.value   ? Number(editPassengers.value) : 5
@@ -474,6 +496,7 @@ editForm?.addEventListener('submit', async (e) => {
             v.id === editId.value ? { ...v, ...dataToSave } : v
         )
         renderGrid(allVehicles)
+
         showToast('Vehículo actualizado', 'success')
         editModal?.hide()
     } catch (err) {
