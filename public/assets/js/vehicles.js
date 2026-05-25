@@ -9,25 +9,32 @@ const searchInput    = document.getElementById('searchInput')
 const filterStatus   = document.getElementById('filterStatus')
 const loadingState   = document.getElementById('loadingState')
 const emptyState     = document.getElementById('emptyState')
-const tableContainer = document.getElementById('tableContainer')
-const vehiclesBody   = document.getElementById('vehiclesBody')
+const vehiclesGrid   = document.getElementById('vehiclesGrid')
 
-// Modal crear
-const createForm        = document.getElementById('createVehicleForm')
-const createBrand       = document.getElementById('createBrand')
-const createModel       = document.getElementById('createModel')
-const createYear        = document.getElementById('createYear')
-const createPlate       = document.getElementById('createPlate')
-const createCategory    = document.getElementById('createCategory')
-const createPrice       = document.getElementById('createDailyPrice')
-const createBtn         = document.getElementById('createVehicleBtn')
-const createImageInput  = document.getElementById('createImage')
-const createPreviewEl   = document.getElementById('createImagePreview')
-const createPreviewImg  = createPreviewEl?.querySelector('img')
-const createDropZone    = document.getElementById('createDropZone')
-const createRemoveBtn   = document.getElementById('createRemoveImg')
+// Modal crear — campos base
+const createForm         = document.getElementById('createVehicleForm')
+const createBrand        = document.getElementById('createBrand')
+const createModel        = document.getElementById('createModel')
+const createYear         = document.getElementById('createYear')
+const createPlate        = document.getElementById('createPlate')
+const createCategory     = document.getElementById('createCategory')
+const createPrice        = document.getElementById('createDailyPrice')
+const createBtn          = document.getElementById('createVehicleBtn')
+const createImageInput   = document.getElementById('createImage')
+const createPreviewEl    = document.getElementById('createImagePreview')
+const createPreviewImg   = createPreviewEl?.querySelector('img')
+const createDropZone     = document.getElementById('createDropZone')
+const createRemoveBtn    = document.getElementById('createRemoveImg')
+// Modal crear — campos extra (compañero)
+const createTransmission = document.getElementById('createTransmission')
+const createFuel         = document.getElementById('createFuel')
+const createPassengers   = document.getElementById('createPassengers')
+const createInsurance    = document.getElementById('createInsurance')
+const createFuelPolicy   = document.getElementById('createFuelPolicy')
+const createLargeBags    = document.getElementById('createLargeBags')
+const createSmallBags    = document.getElementById('createSmallBags')
 
-// Modal editar
+// Modal editar — campos base
 const editForm          = document.getElementById('editVehicleForm')
 const editId            = document.getElementById('editVehicleId')
 const editBrand         = document.getElementById('editBrand')
@@ -46,6 +53,14 @@ const editPreviewEl     = document.getElementById('editImagePreview')
 const editPreviewImg    = editPreviewEl?.querySelector('img')
 const editCancelNewBtn  = document.getElementById('editCancelNewImg')
 const editDropZone      = document.getElementById('editDropZone')
+// Modal editar — campos extra (compañero)
+const editTransmission  = document.getElementById('editTransmission')
+const editFuel          = document.getElementById('editFuel')
+const editPassengers    = document.getElementById('editPassengers')
+const editInsurance     = document.getElementById('editInsurance')
+const editFuelPolicy    = document.getElementById('editFuelPolicy')
+const editLargeBags     = document.getElementById('editLargeBags')
+const editSmallBags     = document.getElementById('editSmallBags')
 
 const createModalEl = document.getElementById('createVehicleModal')
 const editModalEl   = document.getElementById('editVehicleModal')
@@ -63,15 +78,19 @@ let editRemoveImage = false
 checkAuth(async (user) => {
     if (!user) { window.location.href = '../login.html'; return }
     currentUser = user
+
+    // Obtener nombre real desde Firestore y mostrarlo en el navbar
+    const usersRes = await getDocuments(COLLECTIONS.USERS)
+    const userData = usersRes.success ? usersRes.data.find(u => u.uid === user.uid) : null
+    const nombre   = userData?.name || user.displayName || user.email?.split('@')[0] || 'Admin'
+    window.setNavbarUser(nombre)
+
     await Promise.all([loadCategories(), loadVehicles()])
 })
 
-// ── Navbar ──
+// ── Navbar: solo manejar logout ──
 document.addEventListener('navbarLoaded', () => {
-    const navbarContainer = document.getElementById('navbarContainer')
-    const navUserName = navbarContainer?.querySelector('#navUserName')
-    const logoutBtn   = navbarContainer?.querySelector('#logoutBtn')
-    if (navUserName && currentUser) navUserName.textContent = currentUser.displayName || currentUser.email
+    const logoutBtn = document.getElementById('logoutBtn')
     logoutBtn?.addEventListener('click', async () => { await logoutUser(); window.location.href = '../login.html' })
 })
 
@@ -166,7 +185,7 @@ const loadVehicles = async () => {
         }
         allVehicles = result.data
         loadingState.classList.add('d-none')
-        renderTable(allVehicles)
+        renderGrid(allVehicles)
     } catch (err) {
         showAlert('vehiclesAlert', 'Ocurrió un error inesperado')
         loadingState.classList.add('d-none')
@@ -174,59 +193,84 @@ const loadVehicles = async () => {
     }
 }
 
-const statusBadge = (status) => {
+/* ======================================================
+   HELPERS DE ESTADO Y CATEGORÍA
+====================================================== */
+
+const statusConfig = (status) => {
     const map = {
-        available:   ['success',   'Disponible'],
-        rented:      ['primary',   'Rentado'],
-        maintenance: ['warning',   'Mantenimiento'],
-        inactive:    ['secondary', 'Inactivo']
+        available:   { color: 'success',   label: 'Disponible' },
+        rented:      { color: 'primary',   label: 'Rentado' },
+        maintenance: { color: 'warning',   label: 'Mantenimiento' },
+        inactive:    { color: 'secondary', label: 'Inactivo' }
     }
-    const [color, label] = map[status] || ['secondary', status]
-    return `<span class="badge bg-${color}">${label}</span>`
+    return map[status] || { color: 'secondary', label: status }
 }
 
 const getCategoryName = (id) => {
     const cat = categories.find(c => c.id === id)
-    return cat ? cat.name : '<span class="text-muted fst-italic small">Sin categoría</span>'
+    return cat ? cat.name : 'Sin categoría'
 }
 
-const NO_IMG = `<div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:48px;height:38px">
-    <i class="bi bi-car-front text-secondary" style="font-size:.9rem"></i></div>`
+/* ======================================================
+   RENDER — GRID DE TARJETAS
+====================================================== */
 
-const renderTable = (vehicles) => {
+const renderGrid = (vehicles) => {
     if (vehicles.length === 0) {
-        tableContainer.classList.add('d-none')
+        vehiclesGrid.classList.add('d-none')
         emptyState.classList.remove('d-none')
         return
     }
     emptyState.classList.add('d-none')
-    tableContainer.classList.remove('d-none')
-    vehiclesBody.innerHTML = vehicles.map(v => `
-        <tr>
-            <td class="ps-4">
-                ${v.imageUrl
-                    ? `<img src="${v.imageUrl}" style="width:48px;height:38px;object-fit:cover;border-radius:6px" alt="${v.brand}">`
-                    : NO_IMG}
-            </td>
-            <td class="fw-semibold">${v.brand} ${v.model}</td>
-            <td class="text-secondary">${v.year}</td>
-            <td>${v.plate}</td>
-            <td>${getCategoryName(v.categoryId)}</td>
-            <td>$${Number(v.dailyPrice).toFixed(2)}</td>
-            <td>${statusBadge(v.status)}</td>
-            <td class="text-end pe-4">
-                <div class="d-flex justify-content-end gap-2">
-                    <button class="btn btn-outline-primary btn-sm" onclick="openEditVehicle('${v.id}')" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-outline-danger btn-sm" onclick="deleteVehicle('${v.id}', '${v.brand} ${v.model}')" title="Eliminar">
-                        <i class="bi bi-trash"></i>
-                    </button>
+    vehiclesGrid.classList.remove('d-none')
+
+    vehiclesGrid.innerHTML = vehicles.map(v => {
+        const { color, label } = statusConfig(v.status)
+
+        const imgHtml = v.imageUrl
+            ? `<img src="${v.imageUrl}" class="card-img-top" alt="${v.brand} ${v.model}">`
+            : `<div class="no-img"><i class="bi bi-car-front text-secondary" style="font-size:3rem"></i></div>`
+
+        return `
+            <div class="col-sm-6 col-lg-4 col-xl-3">
+                <div class="card vehicle-admin-card h-100 shadow-sm">
+                    ${imgHtml}
+                    <div class="card-body p-3 d-flex flex-column gap-2">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div>
+                                <h6 class="fw-bold mb-0">${v.brand} ${v.model}</h6>
+                                <small class="text-secondary">${v.year} · ${v.plate}</small>
+                                ${v.transmission ? `<br><small class="text-secondary">${v.transmission} · ${v.fuel || 'Gasolina'}</small>` : ''}
+                            </div>
+                            <span class="price-tag flex-shrink-0">
+                                $${Number(v.dailyPrice).toFixed(2)}
+                                <span style="font-weight:400;font-size:.75rem">/día</span>
+                            </span>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <span class="badge bg-light text-secondary border">
+                                <i class="bi bi-tag me-1"></i>${getCategoryName(v.categoryId)}
+                            </span>
+                            <span class="badge bg-${color} status-pill">${label}</span>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-outline-primary btn-sm flex-grow-1" onclick="openEditVehicle('${v.id}')" title="Editar">
+                            <i class="bi bi-pencil me-1"></i>Editar
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm flex-grow-1" onclick="deleteVehicle('${v.id}', '${v.brand} ${v.model}')" title="Eliminar">
+                            <i class="bi bi-trash me-1"></i>Eliminar
+                        </button>
+                    </div>
                 </div>
-            </td>
-        </tr>
-    `).join('')
+            </div>`
+    }).join('')
 }
+
+/* ======================================================
+   FILTROS
+====================================================== */
 
 const applyFilters = () => {
     const search = searchInput?.value.toLowerCase().trim() || ''
@@ -236,7 +280,7 @@ const applyFilters = () => {
         const matchStatus = !status || v.status === status
         return matchSearch && matchStatus
     })
-    renderTable(filtered)
+    renderGrid(filtered)
 }
 searchInput?.addEventListener('input', applyFilters)
 filterStatus?.addEventListener('change', applyFilters)
@@ -277,15 +321,31 @@ createForm?.addEventListener('submit', async (e) => {
     try {
         showButtonLoader(createBtn, 'Guardando...')
 
+        // Campos extra del compañero
+        const transmissionVal = createTransmission?.value || 'Automática'
+        const fuelVal         = createFuel?.value         || 'Gasolina'
+        const passengersVal   = createPassengers?.value   ? Number(createPassengers.value) : 5
+        const insuranceVal    = createInsurance?.value?.trim() || 'Básico incluido'
+        const fuelPolicyVal   = createFuelPolicy?.value   || 'Lleno a Lleno'
+        const largeBagsVal    = createLargeBags?.value    ? Number(createLargeBags.value) : 2
+        const smallBagsVal    = createSmallBags?.value    ? Number(createSmallBags.value) : 2
+
         const result = await createDocument(COLLECTIONS.VEHICLES, {
-            brand:      createBrand.value.trim(),
-            model:      createModel.value.trim(),
-            year:       Number(createYear.value),
-            plate:      createPlate.value.trim().toUpperCase(),
-            categoryId: createCategory.value,
-            dailyPrice: Number(createPrice.value),
-            status:     'available',
-            imageUrl:   null
+            brand:        createBrand.value.trim(),
+            model:        createModel.value.trim(),
+            year:         Number(createYear.value),
+            plate:        createPlate.value.trim().toUpperCase(),
+            categoryId:   createCategory.value,
+            dailyPrice:   Number(createPrice.value),
+            status:       'available',
+            transmission: transmissionVal,
+            fuel:         fuelVal,
+            passengers:   passengersVal,
+            insurance:    insuranceVal,
+            fuelPolicy:   fuelPolicyVal,
+            largeBags:    largeBagsVal,
+            smallBags:    smallBagsVal,
+            imageUrl:     null
         })
         if (!result.success) { showAlert('createAlert', 'No se pudo guardar el vehículo'); return }
 
@@ -329,6 +389,15 @@ window.openEditVehicle = (id) => {
     editStatus.value   = v.status     || 'available'
     if (editCategory) editCategory.value = v.categoryId || ''
 
+    // Campos extra del compañero
+    if (editTransmission) editTransmission.value = v.transmission || 'Automática'
+    if (editFuel)         editFuel.value         = v.fuel         || 'Gasolina'
+    if (editPassengers)   editPassengers.value   = v.passengers   || 5
+    if (editInsurance)    editInsurance.value    = v.insurance    || 'Básico incluido'
+    if (editFuelPolicy)   editFuelPolicy.value   = v.fuelPolicy   || 'Lleno a Lleno'
+    if (editLargeBags)    editLargeBags.value    = v.largeBags !== undefined ? v.largeBags : 2
+    if (editSmallBags)    editSmallBags.value    = v.smallBags !== undefined ? v.smallBags : 2
+
     if (v.imageUrl && !v.imageUrl.startsWith('data:')) {
         editCurrentImgEl.src = v.imageUrl
         editCurrentImg.classList.remove('d-none')
@@ -350,7 +419,6 @@ editForm?.addEventListener('submit', async (e) => {
         const currentVehicle = allVehicles.find(v => v.id === editId.value)
         let imageUrl = currentVehicle?.imageUrl || null
 
-        // Limpiar imágenes base64 antiguas
         if (imageUrl && imageUrl.startsWith('data:')) {
             imageUrl = null
             if (!editImageFile) {
@@ -369,29 +437,43 @@ editForm?.addEventListener('submit', async (e) => {
             imageUrl = null
         }
 
+        // Campos extra del compañero
+        const transmissionVal = editTransmission?.value || 'Automática'
+        const fuelVal         = editFuel?.value         || 'Gasolina'
+        const passengersVal   = editPassengers?.value   ? Number(editPassengers.value) : 5
+        const insuranceVal    = editInsurance?.value?.trim() || 'Básico incluido'
+        const fuelPolicyVal   = editFuelPolicy?.value   || 'Lleno a Lleno'
+        const largeBagsVal    = editLargeBags?.value    ? Number(editLargeBags.value) : 2
+        const smallBagsVal    = editSmallBags?.value    ? Number(editSmallBags.value) : 2
+
         const dataToSave = {
-            brand:      editBrand.value.trim(),
-            model:      editModel.value.trim(),
-            year:       Number(editYear.value),
-            plate:      editPlate.value.trim().toUpperCase(),
-            categoryId: editCategory.value,
-            dailyPrice: Number(editPrice.value),
-            status:     editStatus.value,
-            imageUrl:   imageUrl || null
+            brand:        editBrand.value.trim(),
+            model:        editModel.value.trim(),
+            year:         Number(editYear.value),
+            plate:        editPlate.value.trim().toUpperCase(),
+            categoryId:   editCategory.value,
+            dailyPrice:   Number(editPrice.value),
+            status:       editStatus.value,
+            transmission: transmissionVal,
+            fuel:         fuelVal,
+            passengers:   passengersVal,
+            insurance:    insuranceVal,
+            fuelPolicy:   fuelPolicyVal,
+            largeBags:    largeBagsVal,
+            smallBags:    smallBagsVal,
+            imageUrl:     imageUrl || null
         }
 
         const result = await updateDocument(COLLECTIONS.VEHICLES, editId.value, dataToSave)
         if (!result.success) { showAlert('editAlert', 'No se pudo actualizar: ' + result.error); return }
 
-        // Verificar en servidor (sin caché) que imageUrl se guardó
         const verify = await getDocumentFromServer(COLLECTIONS.VEHICLES, editId.value)
-        console.log('✅ Verificación SERVIDOR — imageUrl:', verify.data?.imageUrl || '❌ NULL — NO se guardó en servidor')
+        console.log('✅ Verificación SERVIDOR — imageUrl:', verify.data?.imageUrl || '❌ NULL')
 
         allVehicles = allVehicles.map(v =>
             v.id === editId.value ? { ...v, ...dataToSave } : v
         )
-        renderTable(allVehicles)
-
+        renderGrid(allVehicles)
         showToast('Vehículo actualizado', 'success')
         editModal?.hide()
     } catch (err) {
@@ -414,7 +496,7 @@ window.deleteVehicle = async (id, nombre) => {
         const result = await deleteDocument(COLLECTIONS.VEHICLES, id)
         if (!result.success) { showToast('No se pudo eliminar', 'danger'); return }
         allVehicles = allVehicles.filter(v => v.id !== id)
-        renderTable(allVehicles)
+        renderGrid(allVehicles)
         showToast(`"${nombre}" eliminado`, 'success')
     } catch (err) {
         showToast('Error inesperado', 'danger')
