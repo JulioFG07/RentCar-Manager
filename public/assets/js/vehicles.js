@@ -13,13 +13,22 @@ const tableContainer = document.getElementById('tableContainer')
 const vehiclesBody   = document.getElementById('vehiclesBody')
 
 // Modal crear
-const createForm        = document.getElementById('createVehicleForm')
-const createBrand       = document.getElementById('createBrand')
-const createModel       = document.getElementById('createModel')
-const createYear        = document.getElementById('createYear')
-const createPlate       = document.getElementById('createPlate')
-const createCategory    = document.getElementById('createCategory')
-const createPrice       = document.getElementById('createDailyPrice')
+const createForm         = document.getElementById('createVehicleForm')
+const createBrand        = document.getElementById('createBrand')
+const createModel        = document.getElementById('createModel')
+const createYear         = document.getElementById('createYear')
+const createPlate        = document.getElementById('createPlate')
+const createCategory     = document.getElementById('createCategory')
+const createPrice        = document.getElementById('createDailyPrice')
+const createTransmission = document.getElementById('createTransmission')
+const createFuel         = document.getElementById('createFuel')
+const createPassengers   = document.getElementById('createPassengers')
+const createInsurance    = document.getElementById('createInsurance')
+// Nuevas referencias (Crear)
+const createFuelPolicy   = document.getElementById('createFuelPolicy')
+const createLargeBags    = document.getElementById('createLargeBags')
+const createSmallBags    = document.getElementById('createSmallBags')
+
 const createBtn         = document.getElementById('createVehicleBtn')
 const createImageInput  = document.getElementById('createImage')
 const createPreviewEl   = document.getElementById('createImagePreview')
@@ -37,6 +46,15 @@ const editPlate         = document.getElementById('editPlate')
 const editCategory      = document.getElementById('editCategory')
 const editPrice         = document.getElementById('editDailyPrice')
 const editStatus        = document.getElementById('editStatus')
+const editTransmission  = document.getElementById('editTransmission')
+const editFuel          = document.getElementById('editFuel')
+const editPassengers    = document.getElementById('editPassengers')
+const editInsurance     = document.getElementById('editInsurance')
+// Nuevas referencias (Editar)
+const editFuelPolicy     = document.getElementById('editFuelPolicy')
+const editLargeBags      = document.getElementById('editLargeBags')
+const editSmallBags      = document.getElementById('editSmallBags')
+
 const saveBtn           = document.getElementById('saveVehicleBtn')
 const editImageInput    = document.getElementById('editImage')
 const editCurrentImg    = document.getElementById('editCurrentImg')
@@ -277,15 +295,32 @@ createForm?.addEventListener('submit', async (e) => {
     try {
         showButtonLoader(createBtn, 'Guardando...')
 
+        const transmissionVal = createTransmission?.value || 'Automática'
+        const fuelVal         = createFuel?.value || 'Gasolina'
+        const passengersVal   = createPassengers?.value ? Number(createPassengers.value) : 5
+        const insuranceVal    = createInsurance?.value.trim() || 'Básico incluido'
+        
+        // Valores de Políticas y Equipaje
+        const fuelPolicyVal   = createFuelPolicy?.value || 'Lleno a Lleno'
+        const largeBagsVal    = createLargeBags?.value ? Number(createLargeBags.value) : 2
+        const smallBagsVal    = createSmallBags?.value ? Number(createSmallBags.value) : 2
+
         const result = await createDocument(COLLECTIONS.VEHICLES, {
-            brand:      createBrand.value.trim(),
-            model:      createModel.value.trim(),
-            year:       Number(createYear.value),
-            plate:      createPlate.value.trim().toUpperCase(),
-            categoryId: createCategory.value,
-            dailyPrice: Number(createPrice.value),
-            status:     'available',
-            imageUrl:   null
+            brand:        createBrand.value.trim(),
+            model:        createModel.value.trim(),
+            year:         Number(createYear.value),
+            plate:        createPlate.value.trim().toUpperCase(),
+            categoryId:   createCategory.value,
+            dailyPrice:   Number(createPrice.value),
+            status:       'available',
+            transmission: transmissionVal,
+            fuel:         fuelVal,
+            passengers:   passengersVal,
+            insurance:    insuranceVal,
+            fuelPolicy:   fuelPolicyVal,
+            largeBags:    largeBagsVal,
+            smallBags:    smallBagsVal,
+            imageUrl:     null
         })
         if (!result.success) { showAlert('createAlert', 'No se pudo guardar el vehículo'); return }
 
@@ -329,6 +364,16 @@ window.openEditVehicle = (id) => {
     editStatus.value   = v.status     || 'available'
     if (editCategory) editCategory.value = v.categoryId || ''
 
+    if (editTransmission) editTransmission.value = v.transmission || 'Automática'
+    if (editFuel)         editFuel.value         = v.fuel         || 'Gasolina'
+    if (editPassengers)   editPassengers.value   = v.passengers   || 5
+    if (editInsurance)    editInsurance.value    = v.insurance    || 'Básico incluido'
+    
+    // Precargar Políticas y Equipaje
+    if (editFuelPolicy)   editFuelPolicy.value   = v.fuelPolicy   || 'Lleno a Lleno'
+    if (editLargeBags)    editLargeBags.value    = v.largeBags !== undefined ? v.largeBags : 2
+    if (editSmallBags)    editSmallBags.value    = v.smallBags !== undefined ? v.smallBags : 2
+
     if (v.imageUrl && !v.imageUrl.startsWith('data:')) {
         editCurrentImgEl.src = v.imageUrl
         editCurrentImg.classList.remove('d-none')
@@ -350,7 +395,6 @@ editForm?.addEventListener('submit', async (e) => {
         const currentVehicle = allVehicles.find(v => v.id === editId.value)
         let imageUrl = currentVehicle?.imageUrl || null
 
-        // Limpiar imágenes base64 antiguas
         if (imageUrl && imageUrl.startsWith('data:')) {
             imageUrl = null
             if (!editImageFile) {
@@ -369,21 +413,37 @@ editForm?.addEventListener('submit', async (e) => {
             imageUrl = null
         }
 
+        const transmissionVal = editTransmission?.value || 'Automática'
+        const fuelVal         = editFuel?.value || 'Gasolina'
+        const passengersVal   = editPassengers?.value ? Number(editPassengers.value) : 5
+        const insuranceVal    = editInsurance?.value.trim() || 'Básico incluido'
+        
+        // Recuperar valores de Políticas y Equipaje
+        const fuelPolicyVal   = editFuelPolicy?.value || 'Lleno a Lleno'
+        const largeBagsVal    = editLargeBags?.value ? Number(editLargeBags.value) : 2
+        const smallBagsVal    = editSmallBags?.value ? Number(editSmallBags.value) : 2
+
         const dataToSave = {
-            brand:      editBrand.value.trim(),
-            model:      editModel.value.trim(),
-            year:       Number(editYear.value),
-            plate:      editPlate.value.trim().toUpperCase(),
-            categoryId: editCategory.value,
-            dailyPrice: Number(editPrice.value),
-            status:     editStatus.value,
-            imageUrl:   imageUrl || null
+            brand:        editBrand.value.trim(),
+            model:        editModel.value.trim(),
+            year:         Number(editYear.value),
+            plate:        editPlate.value.trim().toUpperCase(),
+            categoryId:   editCategory.value,
+            dailyPrice:   Number(editPrice.value),
+            status:       editStatus.value,
+            transmission: transmissionVal,
+            fuel:         fuelVal,
+            passengers:   passengersVal,
+            insurance:    insuranceVal,
+            fuelPolicy:   fuelPolicyVal,
+            largeBags:    largeBagsVal,
+            smallBags:    smallBagsVal,
+            imageUrl:     imageUrl || null
         }
 
         const result = await updateDocument(COLLECTIONS.VEHICLES, editId.value, dataToSave)
         if (!result.success) { showAlert('editAlert', 'No se pudo actualizar: ' + result.error); return }
 
-        // Verificar en servidor (sin caché) que imageUrl se guardó
         const verify = await getDocumentFromServer(COLLECTIONS.VEHICLES, editId.value)
         console.log('✅ Verificación SERVIDOR — imageUrl:', verify.data?.imageUrl || '❌ NULL — NO se guardó en servidor')
 

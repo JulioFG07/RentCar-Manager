@@ -97,7 +97,6 @@
     </div>
   </main>
 
-  <!-- MODAL CREAR -->
   <div class="modal fade" id="createVehicleModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 shadow-lg">
@@ -145,7 +144,62 @@
                 <div class="invalid-feedback"></div>
               </div>
 
-              <!-- FOTO -->
+              <div class="col-md-6">
+                <label class="form-label">Transmisión</label>
+                <select class="form-select" id="createTransmission">
+                  <option value="Automática">Automática</option>
+                  <option value="Manual">Manual (Estándar)</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Tipo de Combustible</label>
+                <select class="form-select" id="createFuel">
+                  <option value="Gasolina">Gasolina</option>
+                  <option value="Diésel">Diésel</option>
+                  <option value="Híbrido">Híbrido</option>
+                  <option value="Eléctrico">Eléctrico</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Capacidad (Pasajeros)</label>
+                <input type="number" class="form-control" id="createPassengers" min="1" max="15" placeholder="Ej. 5">
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Tipo de Seguro</label>
+                <input type="text" class="form-control" id="createInsurance" placeholder="Ej. Cobertura Amplia o Básico incluido">
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Política de Combustible</label>
+                <select id="createFuelPolicy" class="form-select">
+                  <option value="Lleno a Lleno">Lleno a Lleno (Full to Full)</option>
+                  <option value="Mismo Nivel">Mismo Nivel</option>
+                  <option value="Tanque Prepagado">Tanque Prepagado</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Maletas Grandes</label>
+                <select id="createLargeBags" class="form-select">
+                  <option value="0">0 maletas</option>
+                  <option value="1">1 maleta</option>
+                  <option value="2" selected>2 maletas</option>
+                  <option value="3">3 maletas</option>
+                  <option value="4">4+ maletas</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Maletas Pequeñas</label>
+                <select id="createSmallBags" class="form-select">
+                  <option value="0">0 maletas</option>
+                  <option value="1">1 maleta</option>
+                  <option value="2" selected>2 maletas</option>
+                  <option value="3">3 maletas</option>
+                  <option value="4">4+ maletas</option>
+                </select>
+              </div>
+
               <div class="col-12">
                 <label class="form-label">Fotografía del vehículo <span class="text-muted">(opcional)</span></label>
                 <div class="img-drop-zone" id="createDropZone" onclick="document.getElementById('createImage').click()">
@@ -174,7 +228,6 @@
     </div>
   </div>
 
-  <!-- MODAL EDITAR -->
   <div class="modal fade" id="editVehicleModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 shadow-lg">
@@ -232,7 +285,62 @@
                 </select>
               </div>
 
-              <!-- FOTO -->
+              <div class="col-md-6">
+                <label class="form-label">Transmisión</label>
+                <select class="form-select" id="editTransmission">
+                  <option value="Automática">Automática</option>
+                  <option value="Manual">Manual (Estándar)</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Tipo de Combustible</label>
+                <select class="form-select" id="editFuel">
+                  <option value="Gasolina">Gasolina</option>
+                  <option value="Diésel">Diésel</option>
+                  <option value="Híbrido">Híbrido</option>
+                  <option value="Eléctrico">Eléctrico</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Capacidad (Pasajeros)</label>
+                <input type="number" class="form-control" id="editPassengers" min="1" max="15">
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Tipo de Seguro</label>
+                <input type="text" class="form-control" id="editInsurance">
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Política de Combustible</label>
+                <select id="editFuelPolicy" class="form-select">
+                  <option value="Lleno a Lleno">Lleno a Lleno (Full to Full)</option>
+                  <option value="Mismo Nivel">Mismo Nivel</option>
+                  <option value="Tanque Prepagado">Tanque Prepagado</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Maletas Grandes</label>
+                <select id="editLargeBags" class="form-select">
+                  <option value="0">0 maletas</option>
+                  <option value="1">1 maleta</option>
+                  <option value="2">2 maletas</option>
+                  <option value="3">3 maletas</option>
+                  <option value="4">4+ maletas</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Maletas Pequeñas</label>
+                <select id="editSmallBags" class="form-select">
+                  <option value="0">0 maletas</option>
+                  <option value="1">1 maleta</option>
+                  <option value="2">2 maletas</option>
+                  <option value="3">3 maletas</option>
+                  <option value="4">4+ maletas</option>
+                </select>
+              </div>
+
               <div class="col-12">
                 <label class="form-label">Fotografía del vehículo <span class="text-muted">(opcional)</span></label>
                 <div id="editCurrentImg" class="mb-2 d-none">
