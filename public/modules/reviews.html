@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reseñas – RentCar Manager</title>
+
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <!-- Estilos globales del proyecto -->
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+
+    <style>
+        /* ── Tarjetas de reseña individual ── */
+        .review-card {
+            border-radius: 14px;
+            overflow: hidden;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .review-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,.25) !important;
+        }
+
+        /* ── Tarjetas de vehículo (vista agrupada) ── */
+        .vehicle-card {
+            border-radius: 14px;
+            overflow: hidden;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .vehicle-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,.25) !important;
+        }
+        .vehicle-card .expand-btn {
+            cursor: pointer;
+            user-select: none;
+        }
+        .vehicle-reviews-collapse {
+            border-top: 1px solid var(--bs-border-color);
+        }
+        .sub-review-item {
+            border-bottom: 1px solid var(--bs-border-color-translucent);
+            padding: .75rem 0;
+        }
+        .sub-review-item:last-child { border-bottom: none; }
+
+        /* Imagen del vehículo */
+        .review-vehicle-img {
+            position: relative;
+            height: 160px;
+            background: var(--bs-secondary-bg, #1e1e2e);
+            overflow: hidden;
+        }
+        .vehicle-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .no-vehicle-img {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #6b7280;
+            background: var(--bs-tertiary-bg, #2a2a3e);
+        }
+
+        /* Badge rating sobre imagen */
+        .rating-badge {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,.65);
+            color: #fff;
+            font-size: .78rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+        /* Badge de cantidad de reseñas */
+        .count-badge {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: rgba(0,0,0,.65);
+            color: #fff;
+            font-size: .75rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Comentario recortado */
+        .review-comment {
+            font-size: .875rem;
+            color: var(--bs-body-color);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Avatar de usuario */
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bs-primary);
+            color: #fff;
+            font-size: .72rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* Tarjetas de stats */
+        .stat-card {
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+        }
+
+        /* Barra de distribución */
+        .dist-bar-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .dist-label { font-size: .75rem; min-width: 20px; text-align: right; }
+        .dist-bar-bg {
+            flex: 1;
+            height: 8px;
+            background: var(--bs-border-color);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .dist-bar-fill {
+            height: 100%;
+            background: #f59e0b;
+            border-radius: 99px;
+            transition: width .5s ease;
+        }
+        .dist-count { font-size: .72rem; color: var(--bs-secondary-color); min-width: 24px; }
+
+        /* Toggle de vista */
+        .view-toggle .btn { border-radius: 8px; }
+        .view-toggle .btn.active { background: var(--bs-primary); color: #fff; border-color: var(--bs-primary); }
+
+        /* Rating grande en tarjeta vehículo */
+        .vehicle-avg-rating {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+            color: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <div id="navbarContainer"></div>
+
+    <div class="container py-4">
+
+        <!-- Encabezado -->
+        <div class="mb-4">
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-star-fill me-2 text-warning"></i>Reseñas
+            </h2>
+            <p class="text-secondary mb-0">Opiniones de los clientes sobre los vehículos rentados</p>
+        </div>
+
+        <!-- Stats rápidas -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card card border-0 shadow-sm text-center">
+                    <div class="text-secondary small mb-1">
+                        <i class="bi bi-chat-left-text me-1"></i>Total reseñas
+                    </div>
+                    <div class="fw-bold fs-3" id="totalReviews">—</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card card border-0 shadow-sm text-center">
+                    <div class="text-secondary small mb-1">
+                        <i class="bi bi-star-half me-1"></i>Promedio global
+                    </div>
+                    <div class="fw-bold fs-3" id="avgRating">—</div>
+                    <div id="avgStars" class="d-flex justify-content-center gap-1 mt-1" style="font-size:.75rem"></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card card border-0 shadow-sm text-center">
+                    <div class="text-secondary small mb-1">
+                        <i class="bi bi-trophy me-1"></i>Mejor vehículo
+                    </div>
+                    <div class="fw-semibold" id="bestVehicle" style="font-size:.9rem">—</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card card border-0 shadow-sm">
+                    <div class="text-secondary small mb-2">
+                        <i class="bi bi-bar-chart me-1"></i>Distribución
+                    </div>
+                    <div id="distributionBars"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de búsqueda, filtros y toggle de vista -->
+        <div class="card border-0 shadow-sm p-3 mb-4">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="bi bi-search text-secondary"></i>
+                        </span>
+                        <input
+                            type="text"
+                            id="searchInput"
+                            class="form-control border-start-0"
+                            placeholder="Buscar vehículo, usuario o comentario..."
+                        />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="filterRating" class="form-select">
+                        <option value="">Todas las calificaciones</option>
+                        <option value="5">⭐⭐⭐⭐⭐ 5 estrellas</option>
+                        <option value="4">⭐⭐⭐⭐ 4 estrellas</option>
+                        <option value="3">⭐⭐⭐ 3 estrellas</option>
+                        <option value="2">⭐⭐ 2 estrellas</option>
+                        <option value="1">⭐ 1 estrella</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="filterVehicle" class="form-select">
+                        <option value="">Todos los vehículos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select id="sortOrder" class="form-select">
+                        <option value="date_desc">Más recientes</option>
+                        <option value="date_asc">Más antiguos</option>
+                        <option value="rating_desc">Mejor calificación</option>
+                        <option value="rating_asc">Peor calificación</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Segunda fila: toggle de vista -->
+            <div class="d-flex align-items-center justify-content-between mt-3 pt-2 border-top">
+                <small class="text-secondary" id="resultsCount">0 reseñas</small>
+                <div class="view-toggle btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm active" id="viewIndividual" title="Vista individual">
+                        <i class="bi bi-grid-3x3-gap me-1"></i>Individual
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="viewGrouped" title="Vista por vehículo">
+                        <i class="bi bi-layers me-1"></i>Por vehículo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingState" class="text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p class="text-secondary">Cargando reseñas...</p>
+        </div>
+
+        <!-- Empty state -->
+        <div id="emptyState" class="text-center py-5 d-none">
+            <i class="bi bi-star text-secondary" style="font-size:3.5rem"></i>
+            <p class="mt-3 text-secondary fs-5">No hay reseñas</p>
+            <small class="text-muted">Intenta cambiar los filtros o espera a que los clientes califiquen.</small>
+        </div>
+
+        <!-- Vista: Grid individual -->
+        <div id="reviewsGrid" class="row g-3 d-none"></div>
+
+        <!-- Vista: Agrupada por vehículo -->
+        <div id="reviewsGrouped" class="d-none"></div>
+
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Theme init -->
+    <script src="../assets/js/theme-init.js"></script>
+    <!-- Módulo principal -->
+    <script type="module" src="../assets/js/reviews.js"></script>
+</body>
+</html>
