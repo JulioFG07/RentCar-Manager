@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RentCar Manager | Comparador de Vehículos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <style>
+    .page-header {
+        background: var(--primary-gradient);
+        padding: 3rem 0 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 1rem;
+    }
+
+    .vehicle-card {
+        border: 2px solid var(--border-color);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .vehicle-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        border-color: #3b82f6;
+    }
+
+    .vehicle-card.selected {
+        border-color: #10b981;
+        background: linear-gradient(to bottom, #f0fdf4, white);
+    }
+
+    .vehicle-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .price-tag {
+        display: flex;
+        align-items: baseline;
+        gap: 0.25rem;
+    }
+
+    .price-amount {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2563eb;
+    }
+
+    .price-period {
+        font-size: 0.95rem;
+        color: var(--slate-gray);
+    }
+
+    .bg-primary-soft {
+        background-color: rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+    }
+
+    .bg-success-soft {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #059669;
+    }
+
+    .compare-header {
+        padding: 1rem 0;
+    }
+
+    .compare-header h6 {
+        margin-bottom: 0.5rem;
+    }
+
+    .compare-fab {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1000;
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+    }
+
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 1.5rem;
+        }
+        .price-amount {
+            font-size: 1.5rem;
+        }
+        .compare-fab {
+            bottom: 1rem;
+            right: 1rem;
+        }
+    }
+    </style>
+</head>
+<body class="dashboard-page">
+
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="../dashboard.html">
+        <i class="bi bi-car-front-fill me-2"></i>RentCar Manager
+      </a>
+      <div class="d-flex align-items-center gap-2 ms-auto">
+        <span class="text-white small d-none d-md-inline">
+          <i class="bi bi-person-circle me-1"></i>
+          <span id="navUserName">Usuario</span>
+        </span>
+        <button id="logoutBtn" class="btn btn-outline-light btn-sm">
+          <i class="bi bi-box-arrow-right me-1"></i> Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-header">
+    <div class="container">
+      <h1 class="page-title">
+        <i class="bi bi-bar-chart-line me-2"></i>
+        Comparador de Vehículos
+      </h1>
+      <p class="page-subtitle">
+        Selecciona hasta 2 vehículos para comparar precio, características y categoría lado a lado
+      </p>
+    </div>
+  </div>
+
+  <main class="pb-5">
+    <div class="container">
+
+      <div id="loadingState" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="text-secondary mt-3">Cargando vehículos disponibles...</p>
+      </div>
+
+      <div id="emptyState" class="d-none">
+        <div class="card border-0 p-5 text-center">
+          <i class="bi bi-car-front fs-1 text-muted mb-3"></i>
+          <h5 class="fw-bold mb-2">No hay vehículos disponibles</h5>
+          <p class="text-secondary mb-4">
+            Por el momento no hay vehículos disponibles para comparar.
+            Vuelve más tarde o contacta al administrador.
+          </p>
+          <a href="../dashboard.html" class="btn btn-primary">
+            <i class="bi bi-arrow-left me-2"></i>
+            Volver al Dashboard
+          </a>
+        </div>
+      </div>
+
+      <div id="vehiclesGrid" class="d-none mb-5"></div>
+
+      <div id="compareContainer" class="d-none">
+        <div class="card border-0 overflow-hidden mb-4">
+
+          <div class="card-header bg-white border-bottom p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <div>
+                <h5 class="fw-bold mb-1">
+                  <i class="bi bi-clipboard-data text-primary me-2"></i>
+                  Comparación
+                </h5>
+                <p class="text-secondary mb-0 small">
+                  <span id="selectedCount">0</span> vehículo(s) seleccionado(s)
+                </p>
+              </div>
+              <button id="clearCompareBtn" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-trash me-1"></i>
+                Limpiar comparación
+              </button>
+            </div>
+          </div>
+
+          <div id="compareTable"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <button 
+    id="scrollToCompare" 
+    class="btn btn-primary btn-lg rounded-circle compare-fab d-none"
+    onclick="document.getElementById('compareContainer').scrollIntoView({ behavior: 'smooth' })"
+    title="Ver comparación">
+    <i class="bi bi-arrow-down"></i>
+  </button>
+
+  <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="../assets/js/compare-vehicles.js"></script>
+
+  <script>
+    // Mostrar FAB cuando hay comparación activa
+    const observer = new MutationObserver(() => {
+      const compareContainer = document.getElementById('compareContainer')
+      const fab = document.getElementById('scrollToCompare')
+      
+      if (compareContainer.classList.contains('d-none')) {
+        fab.classList.add('d-none')
+      } else {
+        fab.classList.remove('d-none')
+      }
+    })
+
+    observer.observe(document.getElementById('compareContainer'), {
+      attributes: true,
+      attributeFilter: ['class']
+    })
+  </script>
+
+</body>
+</html>
