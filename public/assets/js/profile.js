@@ -1,51 +1,40 @@
 import { checkAuth, logoutUser } from "./auth.js";
-import { getDocuments, updateDocument, getAvailableVehicles, COLLECTIONS } from "./firestore.js";
+import {
+    getDocuments, updateDocument,
+    getFavorites, removeFavorite,
+    getUserReviews,
+    COLLECTIONS
+} from "./firestore.js";
 import { showToast, showButtonLoader, hideButtonLoader, showAlert, hideAlert } from "./ui.js";
 import { isEmpty, isValidPhone } from "./validators.js";
 
-/* ======================================================
-   DOM ELEMENTS
-   navUserName y logoutBtn se obtienen en navbarLoaded
-   porque el navbar se carga dinámicamente
-====================================================== */
-
+// ── DOM ──
 const loadingState   = document.getElementById("loadingState");
 const profileForm    = document.getElementById("profileForm");
-
 const profileName    = document.getElementById("profileName");
 const profileEmail   = document.getElementById("profileEmail");
 const profilePhone   = document.getElementById("profilePhone");
 const profileLicense = document.getElementById("profileLicense");
 const profileAddress = document.getElementById("profileAddress");
 const saveProfileBtn = document.getElementById("saveProfileBtn");
+const viewName       = document.getElementById("viewName");
+const viewEmail      = document.getElementById("viewEmail");
+const viewPhone      = document.getElementById("viewPhone");
+const viewLicense    = document.getElementById("viewLicense");
+const viewAddress    = document.getElementById("viewAddress");
 
-const viewName    = document.getElementById("viewName");
-const viewEmail   = document.getElementById("viewEmail");
-const viewPhone   = document.getElementById("viewPhone");
-const viewLicense = document.getElementById("viewLicense");
-const viewAddress = document.getElementById("viewAddress");
-
-/* ======================================================
-   SESSION VARIABLES
-====================================================== */
-
+// ── Estado ──
 let currentUser    = null;
 let currentProfile = null;
 let isProcessing   = false;
+let allVehicles    = [];
 
-/* ======================================================
-   NAVBAR: esperar a que cargue dinámicamente
-====================================================== */
-
+// ── Navbar ──
 document.addEventListener('navbarLoaded', () => {
     const navbarContainer = document.getElementById('navbarContainer')
     const navUserName     = navbarContainer?.querySelector('#navUserName')
     const logoutBtn       = navbarContainer?.querySelector('#logoutBtn')
-
-    if (navUserName && currentProfile) {
-        navUserName.textContent = currentProfile.name || currentUser?.email
-    }
-
+    if (navUserName && currentProfile) navUserName.textContent = currentProfile.name || currentUser?.email
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
             await logoutUser()
@@ -54,48 +43,43 @@ document.addEventListener('navbarLoaded', () => {
     }
 })
 
-/* ======================================================
-   AUTH & INITIALIZATION
-====================================================== */
-
+// ── Auth ──
 checkAuth(async (user) => {
-
     if (isProcessing) return;
     isProcessing = true;
-
-    if (!user) {
-        window.location.href = "./login.html";
-        return;
-    }
-
+    if (!user) { window.location.href = "./login.html"; return; }
     currentUser = user;
-
     try {
+        const [usersResult, vehiclesResult] = await Promise.all([
+            getDocuments(COLLECTIONS.USERS),
+            getDocuments(COLLECTIONS.VEHICLES)
+        ]);
 
-        const result = await getDocuments(COLLECTIONS.USERS);
-
-        if (!result.success) {
+        if (!usersResult.success) {
             showAlert("profileAlert", "Error al conectar con el servidor de perfiles.");
             return;
         }
 
-        const profile = result.data.find((u) => u.uid === user.uid);
-
+        const profile = usersResult.data.find((u) => u.uid === user.uid);
         if (!profile) {
             showAlert("profileAlert", "No se encontró tu expediente en el sistema.");
             return;
         }
 
         currentProfile = profile;
+        allVehicles    = vehiclesResult.success ? vehiclesResult.data : [];
 
         setupProfileForm(user, profile);
 
-        // Si el navbar ya cargó antes que Firebase, poner el nombre aquí
         const navbarContainer = document.getElementById('navbarContainer')
         const navUserName = navbarContainer?.querySelector('#navUserName')
-        if (navUserName) {
-            navUserName.textContent = profile.name || user.email
-        }
+        if (navUserName) navUserName.textContent = profile.name || user.email
+
+        // Cargar favoritos y reseñas en paralelo
+        await Promise.all([
+            loadFavoritesSection(profile.id),
+            loadReviewsSection(profile.id)
+        ]);
 
     } catch (error) {
         console.error(error);
@@ -103,12 +87,8 @@ checkAuth(async (user) => {
     }
 });
 
-/* ======================================================
-   FORM MANAGEMENT
-====================================================== */
-
+// ── Setup formulario ──
 const setupProfileForm = (user, profile) => {
-
     profileName.value    = profile.name || "";
     profileEmail.value   = profile.email || user.email || "";
     profilePhone.value   = profile.phone || "";
@@ -121,75 +101,50 @@ const setupProfileForm = (user, profile) => {
     if (viewLicense) viewLicense.textContent = profile.licenseNumber || "—";
     if (viewAddress) viewAddress.textContent = profile.address || "—";
 
-    if (loadingState) {
-        loadingState.classList.add("d-none");
-    }
+    if (loadingState) loadingState.classList.add("d-none");
 };
 
-/* ======================================================
-   VALIDATION
-====================================================== */
-
+// ── Validación ──
 const validateProfile = () => {
-
     let valid = true;
-
     if (isEmpty(profileName.value)) {
         showAlert("profileAlert", "El nombre completo es obligatorio.");
         valid = false;
     }
-
     if (profilePhone.value && !isValidPhone(profilePhone.value)) {
         showAlert("profileAlert", "El teléfono debe contener exactamente 10 dígitos numéricos.");
         valid = false;
     }
-
     if (profileLicense.value && profileLicense.value.trim().length < 6) {
         showAlert("profileAlert", "La licencia de conducir debe tener al menos 6 caracteres.");
         valid = false;
     }
-
     return valid;
 };
 
-/* ======================================================
-   SAVE CHANGES
-====================================================== */
-
+// ── Guardar cambios ──
 profileForm?.addEventListener("submit", async (e) => {
-
     e.preventDefault();
     hideAlert("profileAlert");
-
     if (!validateProfile()) return;
-
     try {
-
         showButtonLoader(saveProfileBtn, "Guardando cambios...");
-
-        // Guardar con "name" para ser consistente con el registro
         const result = await updateDocument(COLLECTIONS.USERS, currentProfile.id, {
             name:          profileName.value.trim(),
-            fullName:      profileName.value.trim(),   // sincronizar con dashboard
+            fullName:      profileName.value.trim(),
             phone:         profilePhone.value.trim() || null,
             licenseNumber: profileLicense.value.trim() || null,
             address:       profileAddress.value.trim() || null
         });
-
         if (!result.success) {
             showAlert("profileAlert", "No se pudieron actualizar tus datos en el sistema.");
             return;
         }
-
-        // Actualizar currentProfile local
         currentProfile.name = profileName.value.trim();
 
-        // Actualizar nombre en el navbar
         const navbarContainer = document.getElementById('navbarContainer')
         const navUserName = navbarContainer?.querySelector('#navUserName')
-        if (navUserName) {
-            navUserName.textContent = profileName.value.trim()
-        }
+        if (navUserName) navUserName.textContent = profileName.value.trim()
 
         if (viewName)    viewName.textContent    = profileName.value.trim();
         if (viewPhone)   viewPhone.textContent   = profilePhone.value.trim() || "—";
@@ -198,22 +153,191 @@ profileForm?.addEventListener("submit", async (e) => {
 
         showToast("Tu perfil se ha actualizado correctamente.", "success");
 
-        // Cerrar modo edición automáticamente al guardar
         const profileViewMode = document.getElementById("profileViewMode");
         const profileEditMode = document.getElementById("profileEditMode");
         const toggleEditBtn   = document.getElementById("toggleEditBtn");
-
         profileViewMode?.classList.remove("d-none");
         profileEditMode?.classList.add("d-none");
         toggleEditBtn?.classList.remove("d-none");
 
     } catch (error) {
-
         console.error(error);
         showAlert("profileAlert", "Ocurrió un error inesperado al procesar la actualización.");
-
     } finally {
-
         hideButtonLoader(saveProfileBtn);
     }
 });
+
+/* ======================================================
+   SECCIÓN DE FAVORITOS
+====================================================== */
+
+const loadFavoritesSection = async (profileId) => {
+    const section = document.getElementById('favoritesSection')
+    const loading = document.getElementById('favoritesLoading')
+    const empty   = document.getElementById('favoritesEmpty')
+    const grid    = document.getElementById('favoritesGrid')
+    if (!section) return
+    section.classList.remove('d-none')
+    try {
+        const result = await getFavorites(profileId)
+        if (loading) loading.classList.add('d-none')
+        if (!result.success || result.data.length === 0) {
+            if (empty) empty.classList.remove('d-none')
+            return
+        }
+        if (grid) {
+            grid.classList.remove('d-none')
+            grid.innerHTML = result.data.map(fav => {
+                const vehicle = allVehicles.find(v => v.id === fav.vehicleId)
+                if (!vehicle) return ''
+                return `
+                    <div class="col" id="fav-card-${fav.id}">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden;">
+                            ${vehicle.imageUrl
+                                ? `<img src="${vehicle.imageUrl}" style="height:120px;object-fit:cover;width:100%" alt="${vehicle.brand}">`
+                                : `<div style="height:120px;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);display:flex;align-items:center;justify-content:center;">
+                                       <i class="bi bi-car-front text-secondary" style="font-size:2rem"></i>
+                                   </div>`
+                            }
+                            <div class="card-body p-2">
+                                <h6 class="fw-bold mb-0 small">${vehicle.brand} ${vehicle.model}</h6>
+                                <small class="text-secondary" style="font-size:.7rem">${vehicle.year} · ${vehicle.plate}</small>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="fw-bold text-primary small">$${Number(vehicle.dailyPrice).toFixed(2)}<small class="text-secondary fw-normal">/día</small></span>
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-1" style="font-size:.7rem"
+                                        onclick="removeFav('${fav.id}', '${fav.vehicleId}', '${vehicle.brand} ${vehicle.model}')">
+                                        <i class="bi bi-heart-fill me-1"></i>Quitar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`
+            }).filter(Boolean).join('')
+            if (grid.innerHTML.trim() === '') {
+                grid.classList.add('d-none')
+                if (empty) empty.classList.remove('d-none')
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando favoritos:', error)
+        if (loading) loading.classList.add('d-none')
+        if (empty)   empty.classList.remove('d-none')
+    }
+}
+
+window.removeFav = async (favId, vehicleId, vehicleName) => {
+    if (!confirm(`¿Quitar "${vehicleName}" de tus favoritos?`)) return
+    try {
+        await removeFavorite(currentProfile.id, vehicleId)
+        const card = document.getElementById(`fav-card-${favId}`)
+        if (card) card.remove()
+        const grid = document.getElementById('favoritesGrid')
+        if (grid && grid.children.length === 0) {
+            grid.classList.add('d-none')
+            document.getElementById('favoritesEmpty')?.classList.remove('d-none')
+        }
+        showToast(`"${vehicleName}" quitado de favoritos`, 'warning')
+    } catch (err) {
+        showToast('Error al quitar el favorito', 'danger')
+        console.error(err)
+    }
+}
+
+/* ======================================================
+   SECCIÓN DE RESEÑAS
+====================================================== */
+
+const renderStarsReadonly = (rating) => {
+    let stars = ''
+    for (let i = 1; i <= 5; i++) {
+        stars += i <= rating
+            ? '<i class="bi bi-star-fill" style="color:#f59e0b;font-size:.85rem"></i>'
+            : '<i class="bi bi-star"      style="color:#d1d5db;font-size:.85rem"></i>'
+    }
+    return stars
+}
+
+const formatDate = (value) => {
+    if (!value) return '—'
+    try {
+        if (typeof value.toDate === 'function') return value.toDate().toLocaleDateString('es-MX')
+        return new Date(value).toLocaleDateString('es-MX')
+    } catch { return '—' }
+}
+
+const loadReviewsSection = async (profileId) => {
+    const section = document.getElementById('reviewsSection')
+    const loading = document.getElementById('reviewsLoading')
+    const empty   = document.getElementById('reviewsEmpty')
+    const list    = document.getElementById('reviewsList')
+    if (!section) return
+    section.classList.remove('d-none')
+
+    try {
+        const result = await getUserReviews(profileId)
+        if (loading) loading.classList.add('d-none')
+
+        if (!result.success || result.data.length === 0) {
+            if (empty) empty.classList.remove('d-none')
+            return
+        }
+
+        if (list) {
+            list.classList.remove('d-none')
+
+            // Ordenar por más reciente
+            const sorted = [...result.data].sort((a, b) => {
+                const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0)
+                const db = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0)
+                return db - da
+            })
+
+            list.innerHTML = sorted.map(review => {
+                const vehicle = allVehicles.find(v => v.id === review.vehicleId)
+                const vehicleName = vehicle
+                    ? `${vehicle.brand} ${vehicle.model}`
+                    : 'Vehículo no disponible'
+                const vehicleImg = vehicle?.imageUrl || null
+
+                return `
+                    <div class="d-flex gap-2 p-3 rounded-3 mb-3"
+                         style="background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.15)">
+
+                        <!-- Imagen del vehículo -->
+                        <div class="flex-shrink-0">
+                            ${vehicleImg
+                                ? `<img src="${vehicleImg}" style="width:56px;height:44px;object-fit:cover;border-radius:8px" alt="${vehicleName}">`
+                                : `<div style="width:56px;height:44px;border-radius:8px;background:rgba(0,0,0,.08);display:flex;align-items:center;justify-content:center;">
+                                       <i class="bi bi-car-front text-secondary" style="font-size:.9rem"></i>
+                                   </div>`
+                            }
+                        </div>
+
+                        <!-- Info de la reseña -->
+                        <div class="flex-grow-1 min-width-0">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
+                                <h6 class="fw-bold mb-0 small">${vehicleName}</h6>
+                                <small class="text-secondary" style="font-size:.7rem">${formatDate(review.createdAt)}</small>
+                            </div>
+                            <div class="d-flex gap-1 my-1">
+                                ${renderStarsReadonly(review.rating)}
+                                <small class="text-secondary ms-1" style="font-size:.75rem">${review.rating}/5</small>
+                            </div>
+                            ${review.comment
+                                ? `<p class="text-secondary small mb-0 fst-italic" style="font-size:.78rem">"${review.comment}"</p>`
+                                : `<p class="text-muted small mb-0 fst-italic" style="font-size:.78rem">Sin comentario</p>`
+                            }
+                        </div>
+
+                    </div>
+                `
+            }).join('')
+        }
+
+    } catch (error) {
+        console.error('Error cargando reseñas:', error)
+        if (loading) loading.classList.add('d-none')
+        if (empty)   empty.classList.remove('d-none')
+    }
+}

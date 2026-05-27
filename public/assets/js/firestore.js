@@ -7,7 +7,9 @@ export const COLLECTIONS = {
     VEHICLES: "vehicles",
     VEHICLE_CATEGORIES: "vehicle_categories",
     CUSTOMERS: "customers",
-    RENTALS: "rentals"
+    RENTALS: "rentals",
+    FAVORITES: "favorites",
+    REVIEWS: "reviews"
 };
 
 function createBaseData() {
@@ -39,7 +41,7 @@ export async function createDocument(collectionName, data) {
     }
 }
 
-/* Obtener todos los documentos — siempre desde servidor, sin orderBy para incluir todos */
+/* Obtener todos los documentos */
 export async function getDocuments(collectionName) {
     try {
         const querySnapshot = await getDocsFromServer(collection(db, collectionName));
@@ -74,19 +76,15 @@ export async function updateDocument(collectionName, id, data) {
     try {
         const docRef = doc(db, collectionName, id);
         const payload = { ...data, ...updateBaseData() };
-
         try {
-            // updateDoc es más confiable para documentos existentes
             await updateDoc(docRef, payload);
         } catch (e) {
             if (e.code === 'not-found') {
-                // Si no existe, crearlo con setDoc
                 await setDoc(docRef, payload);
             } else {
                 throw e;
             }
         }
-
         return { success: true };
     } catch (error) {
         console.error("Error updating document:", error);
@@ -106,7 +104,7 @@ export async function deleteDocument(collectionName, id) {
     }
 }
 
-/* Verificar documento directo del servidor (sin caché) */
+/* Verificar documento directo del servidor */
 export async function getDocumentFromServer(collectionName, id) {
     try {
         const docRef = doc(db, collectionName, id);
@@ -121,7 +119,7 @@ export async function getDocumentFromServer(collectionName, id) {
     }
 }
 
-/* Obtener vehículos disponibles — siempre desde servidor para tener imageUrl actualizado */
+/* Obtener vehículos disponibles */
 export async function getAvailableVehicles() {
     try {
         const q = query(
@@ -137,5 +135,198 @@ export async function getAvailableVehicles() {
     } catch (error) {
         console.error(error);
         return { success: false, error: error.message };
+    }
+}
+
+/* ======================================================
+   FAVORITOS
+====================================================== */
+
+/* Obtener favoritos de un cliente */
+export async function getFavorites(customerId) {
+    try {
+        const q = query(
+            collection(db, COLLECTIONS.FAVORITES),
+            where("customerId", "==", customerId),
+            where("active", "==", true)
+        )
+        const querySnapshot = await getDocsFromServer(q)
+        const favorites = []
+        querySnapshot.forEach((docItem) => {
+            favorites.push({ id: docItem.id, ...docItem.data() })
+        })
+        return { success: true, data: favorites }
+    } catch (error) {
+        console.error("Error getting favorites:", error)
+        return { success: false, error: error.message }
+    }
+}
+
+/* Agregar favorito */
+export async function addFavorite(customerId, vehicleId) {
+    try {
+        // Verificar que no exista ya
+        const q = query(
+            collection(db, COLLECTIONS.FAVORITES),
+            where("customerId", "==", customerId),
+            where("vehicleId",  "==", vehicleId),
+            where("active",     "==", true)
+        )
+        const existing = await getDocsFromServer(q)
+        if (!existing.empty) {
+            return { success: true, id: existing.docs[0].id, alreadyExists: true }
+        }
+
+        const docRef = await addDoc(
+            collection(db, COLLECTIONS.FAVORITES),
+            {
+                customerId,
+                vehicleId,
+                ...createBaseData()
+            }
+        )
+        return { success: true, id: docRef.id }
+    } catch (error) {
+        console.error("Error adding favorite:", error)
+        return { success: false, error: error.message }
+    }
+}
+
+/* Quitar favorito */
+export async function removeFavorite(customerId, vehicleId) {
+    try {
+        const q = query(
+            collection(db, COLLECTIONS.FAVORITES),
+            where("customerId", "==", customerId),
+            where("vehicleId",  "==", vehicleId),
+            where("active",     "==", true)
+        )
+        const querySnapshot = await getDocsFromServer(q)
+        if (querySnapshot.empty) return { success: true }
+
+        // Eliminar todos los documentos que coincidan
+        const promises = []
+        querySnapshot.forEach((docItem) => {
+            promises.push(deleteDoc(doc(db, COLLECTIONS.FAVORITES, docItem.id)))
+        })
+        await Promise.all(promises)
+        return { success: true }
+    } catch (error) {
+        console.error("Error removing favorite:", error)
+        return { success: false, error: error.message }
+    }
+}
+
+/* ======================================================
+   DETECCIÓN Y ACTUALIZACIÓN DE RENTAS VENCIDAS
+====================================================== */
+export async function updateExpiredRentals() {
+    try {
+        const result = await getDocuments(COLLECTIONS.RENTALS)
+        if (!result.success) return { success: false, expired: [] }
+
+        const hoy = new Date()
+        hoy.setHours(0, 0, 0, 0)
+
+        const activeRentals = result.data.filter(r => r.status === 'active')
+        const expiredRentals = []
+
+        for (const rental of activeRentals) {
+            try {
+                let endDate = null
+                if (rental.endDate?.toDate) {
+                    endDate = rental.endDate.toDate()
+                } else if (rental.endDate) {
+                    endDate = new Date(rental.endDate)
+                }
+
+                if (!endDate) continue
+
+                endDate.setHours(0, 0, 0, 0)
+
+                if (endDate < hoy) {
+                    await updateDocument(COLLECTIONS.RENTALS, rental.id, { status: 'late' })
+                    expiredRentals.push({ ...rental, status: 'late' })
+                }
+            } catch (err) {
+                console.error(`Error procesando renta ${rental.id}:`, err)
+            }
+        }
+
+        return { success: true, expired: expiredRentals }
+
+    } catch (error) {
+        console.error('Error en updateExpiredRentals:', error)
+        return { success: false, expired: [] }
+    }
+}
+
+/* ======================================================
+   RESEÑAS
+====================================================== */
+
+/* Obtener reseñas de un vehículo */
+export async function getVehicleReviews(vehicleId) {
+    try {
+        const q = query(
+            collection(db, COLLECTIONS.REVIEWS),
+            where("vehicleId", "==", vehicleId),
+            where("active",    "==", true)
+        )
+        const querySnapshot = await getDocsFromServer(q)
+        const reviews = []
+        querySnapshot.forEach((docItem) => {
+            reviews.push({ id: docItem.id, ...docItem.data() })
+        })
+        return { success: true, data: reviews }
+    } catch (error) {
+        console.error("Error getting vehicle reviews:", error)
+        return { success: false, error: error.message }
+    }
+}
+
+/* Obtener reseñas de un cliente */
+export async function getUserReviews(customerId) {
+    try {
+        const q = query(
+            collection(db, COLLECTIONS.REVIEWS),
+            where("customerId", "==", customerId),
+            where("active",     "==", true)
+        )
+        const querySnapshot = await getDocsFromServer(q)
+        const reviews = []
+        querySnapshot.forEach((docItem) => {
+            reviews.push({ id: docItem.id, ...docItem.data() })
+        })
+        return { success: true, data: reviews }
+    } catch (error) {
+        console.error("Error getting user reviews:", error)
+        return { success: false, error: error.message }
+    }
+}
+
+/* Agregar reseña */
+export async function addReview(data) {
+    try {
+        // Verificar que no haya reseñado ya esta renta
+        const q = query(
+            collection(db, COLLECTIONS.REVIEWS),
+            where("rentalId",   "==", data.rentalId),
+            where("customerId", "==", data.customerId),
+            where("active",     "==", true)
+        )
+        const existing = await getDocsFromServer(q)
+        if (!existing.empty) {
+            return { success: false, error: "Ya dejaste una reseña para esta renta" }
+        }
+
+        const docRef = await addDoc(
+            collection(db, COLLECTIONS.REVIEWS),
+            { ...data, ...createBaseData() }
+        )
+        return { success: true, id: docRef.id }
+    } catch (error) {
+        console.error("Error adding review:", error)
+        return { success: false, error: error.message }
     }
 }
