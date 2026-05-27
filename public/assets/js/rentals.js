@@ -1,13 +1,11 @@
 import { checkAuth, logoutUser } from './auth.js';
-import { 
-    getDocuments, getDocumentById, createDocument, updateDocument, 
-    getAvailableVehicles, COLLECTIONS 
+import {
+    getDocuments, getDocumentById, createDocument, updateDocument,
+    getAvailableVehicles, COLLECTIONS
 } from './firestore.js';
 import { showToast, showButtonLoader, hideButtonLoader, showAlert, hideAlert } from './ui.js';
 
 // ── DOM ──
-const navUserName      = document.getElementById('navUserName');
-const logoutBtn        = document.getElementById('logoutBtn');
 const searchInput      = document.getElementById('searchInput');
 const filterCategory   = document.getElementById('filterCategory');
 const loadingState     = document.getElementById('loadingState');
@@ -16,9 +14,9 @@ const tableContainer   = document.getElementById('tableContainer');
 const vehiclesBody     = document.getElementById('vehiclesBody');
 
 // Modal renta
-const rentarModalEl = document.getElementById('rentarModal');
-const rentarModal   = rentarModalEl ? bootstrap.Modal.getOrCreateInstance(rentarModalEl) : null;
-const rentaForm     = document.getElementById('rentaForm');
+const rentarModalEl    = document.getElementById('rentarModal');
+const rentarModal      = rentarModalEl ? bootstrap.Modal.getOrCreateInstance(rentarModalEl) : null;
+const rentaForm        = document.getElementById('rentaForm');
 const modalVehicleId   = document.getElementById('modalVehicleId');
 const modalVehicleName = document.getElementById('modalVehicleName');
 const modalStartDate   = document.getElementById('modalStartDate');
@@ -27,42 +25,72 @@ const modalTotalCost   = document.getElementById('modalTotalCost');
 const confirmRentaBtn  = document.getElementById('confirmRentaBtn');
 
 // Mis rentas
-const rentasLoading      = document.getElementById('rentasLoading');
-const activeRentaSection = document.getElementById('activeRentaSection');
+const rentasLoading          = document.getElementById('rentasLoading');
+const activeRentaSection     = document.getElementById('activeRentaSection');
 const historialRentasSection = document.getElementById('historialRentasSection');
-const noRentasMsg        = document.getElementById('noRentasMsg');
-const activeRentaBody    = document.getElementById('activeRentaBody');
-const historialRentasBody= document.getElementById('historialRentasBody');
-const refreshRentasBtn   = document.getElementById('refreshRentasBtn');
+const noRentasMsg            = document.getElementById('noRentasMsg');
+const activeRentaBody        = document.getElementById('activeRentaBody');
+const historialRentasBody    = document.getElementById('historialRentasBody');
+const refreshRentasBtn       = document.getElementById('refreshRentasBtn');
 
-let allVehicles = [];
-let categories  = [];
+let allVehicles       = [];
+let categories        = [];
 let currentCustomerId = null;
 let currentDailyPrice = 0;
-let hasActiveRental = false;   // para evitar múltiples rentas activas
+let currentUser       = null;
+let currentUserName   = null;   // ← nombre del perfil en Firestore
+let hasActiveRental   = false;
 
-// ── Obtener o crear customerId a partir del UID ──
+// ── Navbar: esperar a que cargue dinámicamente ──
+document.addEventListener('navbarLoaded', () => {
+    const navbarContainer = document.getElementById('navbarContainer')
+    const navUserName     = navbarContainer?.querySelector('#navUserName')
+    const logoutBtn       = navbarContainer?.querySelector('#logoutBtn')
+
+    // Si checkAuth ya terminó, ponemos el nombre; si no, se pondrá después
+    if (navUserName && currentUserName) {
+        navUserName.textContent = currentUserName
+    }
+
+    logoutBtn?.addEventListener('click', async () => {
+        await logoutUser()
+        window.location.href = '../login.html'
+    })
+})
+
+// ── Helper: actualizar nombre en navbar ──
+const updateNavbarName = (name) => {
+    const navbarContainer = document.getElementById('navbarContainer')
+    const navUserName     = navbarContainer?.querySelector('#navUserName')
+    if (navUserName && name) navUserName.textContent = name
+}
+
+// ── Obtener customerId desde COLLECTIONS.USERS usando uid ──
 const getOrCreateCustomerId = async (user) => {
-    // 1. Buscar cliente existente por userId
-    const result = await getDocuments(COLLECTIONS.CUSTOMERS);
-    if (!result.success) throw new Error('No se pudieron cargar clientes');
-    
-    let customer = result.data.find(c => c.userId === user.uid);
-    if (customer) return customer.id;
-    
-    // 2. No existe: crear nuevo cliente
+    const result = await getDocuments(COLLECTIONS.USERS);
+    if (!result.success) throw new Error('No se pudieron cargar los usuarios');
+
+    let customer = result.data.find(c => c.uid === user.uid);
+    if (customer) {
+        // Guardar el nombre del perfil para el navbar
+        currentUserName = customer.name || user.displayName || user.email;
+        return customer.id;
+    }
+
+    // Si no existe, crear en USERS
     const newCustomer = {
-        userId: user.uid,
-        name: user.displayName || user.email.split('@')[0] || 'Cliente',
-        email: user.email,
-        phone: '',
-        licenseNumber: '',
-        address: '',
-        active: true
+        uid:           user.uid,
+        name:          user.displayName || user.email.split('@')[0] || 'Cliente',
+        email:         user.email,
+        phone:         null,
+        licenseNumber: null,
+        address:       null,
+        role:          'user',
+        active:        true
     };
-    const createResult = await createDocument(COLLECTIONS.CUSTOMERS, newCustomer);
+    const createResult = await createDocument(COLLECTIONS.USERS, newCustomer);
     if (!createResult.success) throw new Error('No se pudo crear el perfil de cliente');
-    console.log('✅ Cliente creado automáticamente:', createResult.id);
+    currentUserName = newCustomer.name;
     return createResult.id;
 };
 
@@ -78,25 +106,21 @@ const loadCategories = async () => {
 // ── Cargar vehículos disponibles ──
 const loadVehicles = async () => {
     try {
-        console.log("Cargando vehículos disponibles...");
         const result = await getAvailableVehicles();
-        console.log("Resultado getAvailableVehicles:", result);
         if (!result.success) {
             showAlert('rentalsAlert', 'Error al cargar vehículos: ' + result.error);
             loadingState.classList.add('d-none');
             return;
         }
         allVehicles = result.data;
-        console.log("Vehículos encontrados:", allVehicles.length);
         loadingState.classList.add('d-none');
         if (allVehicles.length === 0) {
             emptyState.classList.remove('d-none');
-            tableContainer.classList.add('d-none');
+            document.getElementById('vehiclesGrid')?.classList.add('d-none');
         } else {
             renderTable(allVehicles);
         }
     } catch (err) {
-        console.error("Excepción en loadVehicles:", err);
         showAlert('rentalsAlert', 'Error inesperado: ' + err.message);
         loadingState.classList.add('d-none');
     }
@@ -109,29 +133,44 @@ const getCategoryName = (categoryId) => {
 };
 
 const renderTable = (vehicles) => {
+    const grid = document.getElementById('vehiclesGrid');
     if (vehicles.length === 0) {
-        tableContainer.classList.add('d-none');
+        if (grid) grid.classList.add('d-none');
         emptyState.classList.remove('d-none');
         return;
     }
     emptyState.classList.add('d-none');
-    tableContainer.classList.remove('d-none');
-    vehiclesBody.innerHTML = vehicles.map(v => `
-        <tr>
-            <td class="ps-4 fw-semibold">${v.brand} ${v.model}</td>
-            <td>${v.year}</td>
-            <td>${v.plate}</td>
-            <td>${getCategoryName(v.categoryId)}</td>
-            <td>$${Number(v.dailyPrice).toFixed(2)}</td>
-            <td class="text-end pe-4">
-                <button class="btn btn-primary btn-sm rentar-btn" 
-                    data-id="${v.id}" 
-                    data-name="${v.brand} ${v.model} (${v.plate})" 
-                    data-price="${v.dailyPrice}">
-                    <i class="bi bi-calendar-plus"></i> Rentar
-                </button>
-            </td>
-        </tr>
+    if (grid) grid.classList.remove('d-none');
+
+    grid.innerHTML = vehicles.map(v => `
+        <div class="col-sm-6 col-lg-4">
+            <div class="vehicle-card card h-100">
+                ${v.imageUrl
+                    ? `<img src="${v.imageUrl}" class="card-img-top" alt="${v.brand} ${v.model}">`
+                    : `<div class="no-img"><i class="bi bi-car-front text-secondary" style="font-size:3rem"></i></div>`
+                }
+                <div class="card-body d-flex flex-column gap-2">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="fw-bold mb-0">${v.brand} ${v.model}</h6>
+                            <small class="text-secondary">${v.year} · ${v.plate}</small>
+                        </div>
+                        <span class="price-badge">$${Number(v.dailyPrice).toFixed(2)}<span class="fw-normal" style="font-size:.75rem">/día</span></span>
+                    </div>
+                    <div>
+                        <span class="badge bg-light text-secondary border">
+                            <i class="bi bi-tag me-1"></i>${getCategoryName(v.categoryId)}
+                        </span>
+                    </div>
+                    <button class="btn btn-primary btn-sm mt-auto rentar-btn"
+                        data-id="${v.id}"
+                        data-name="${v.brand} ${v.model} (${v.plate})"
+                        data-price="${v.dailyPrice}">
+                        <i class="bi bi-calendar-plus me-1"></i>Rentar
+                    </button>
+                </div>
+            </div>
+        </div>
     `).join('');
     document.querySelectorAll('.rentar-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -143,10 +182,10 @@ const renderTable = (vehicles) => {
 // ── Filtros ──
 const applyFilters = () => {
     const search = searchInput?.value.toLowerCase().trim() || '';
-    const catId = filterCategory?.value || '';
+    const catId  = filterCategory?.value || '';
     const filtered = allVehicles.filter(v => {
         const matchSearch = `${v.brand} ${v.model} ${v.plate}`.toLowerCase().includes(search);
-        const matchCat = !catId || v.categoryId === catId;
+        const matchCat    = !catId || v.categoryId === catId;
         return matchSearch && matchCat;
     });
     renderTable(filtered);
@@ -154,18 +193,18 @@ const applyFilters = () => {
 searchInput?.addEventListener('input', applyFilters);
 filterCategory?.addEventListener('change', applyFilters);
 
-// ── Abrir modal renta (con validación de renta activa) ──
+// ── Abrir modal renta ──
 function openRentalModal(vehicleId, vehicleName, dailyPrice) {
     if (hasActiveRental) {
         showAlert('rentalsAlert', 'Ya tienes una renta activa. Debes liberar el vehículo actual antes de rentar otro.');
         return;
     }
     hideAlert('rentarAlert');
-    modalVehicleId.value = vehicleId;
-    modalVehicleName.value = vehicleName;
-    currentDailyPrice = parseFloat(dailyPrice);
-    modalStartDate.value = '';
-    modalEndDate.value = '';
+    modalVehicleId.value       = vehicleId;
+    modalVehicleName.value     = vehicleName;
+    currentDailyPrice          = parseFloat(dailyPrice);
+    modalStartDate.value       = '';
+    modalEndDate.value         = '';
     modalTotalCost.textContent = '$0.00';
     rentarModal?.show();
 }
@@ -173,18 +212,18 @@ function openRentalModal(vehicleId, vehicleName, dailyPrice) {
 // ── Calcular costo ──
 function updateTotalCost() {
     const start = modalStartDate.value;
-    const end = modalEndDate.value;
+    const end   = modalEndDate.value;
     if (!start || !end || !currentDailyPrice) {
         modalTotalCost.textContent = '$0.00';
         return;
     }
     const startDate = new Date(start);
-    const endDate = new Date(end);
+    const endDate   = new Date(end);
     if (endDate <= startDate) {
         modalTotalCost.textContent = 'Fecha inválida';
         return;
     }
-    const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+    const days  = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
     const total = days * currentDailyPrice;
     modalTotalCost.textContent = `$${total.toFixed(2)}`;
 }
@@ -203,9 +242,9 @@ rentaForm?.addEventListener('submit', async (e) => {
         showAlert('rentarAlert', 'Ya tienes una renta activa. Libera el vehículo actual primero.');
         return;
     }
-    const vehicleId = modalVehicleId.value;
-    const start = modalStartDate.value;
-    const end = modalEndDate.value;
+    const vehicleId     = modalVehicleId.value;
+    const start         = modalStartDate.value;
+    const end           = modalEndDate.value;
     const totalCostText = modalTotalCost.textContent;
     if (!vehicleId || !start || !end || totalCostText === 'Fecha inválida') {
         showAlert('rentarAlert', 'Completa las fechas correctamente');
@@ -214,23 +253,19 @@ rentaForm?.addEventListener('submit', async (e) => {
     const totalCost = parseFloat(totalCostText.replace('$', ''));
     try {
         showButtonLoader(confirmRentaBtn, 'Guardando...');
-        // 1. Crear renta
         const rentalResult = await createDocument(COLLECTIONS.RENTALS, {
             customerId: currentCustomerId,
-            vehicleId: vehicleId,
-            startDate: new Date(start),
-            endDate: new Date(end),
-            totalCost: totalCost,
-            status: 'active'
+            vehicleId:  vehicleId,
+            startDate:  new Date(start),
+            endDate:    new Date(end),
+            totalCost:  totalCost,
+            status:     'active'
         });
         if (!rentalResult.success) throw new Error('Error al guardar la renta');
-        // 2. Actualizar estado del vehículo a 'rented'
         const updateResult = await updateDocument(COLLECTIONS.VEHICLES, vehicleId, { status: 'rented' });
         if (!updateResult.success) throw new Error('Error al actualizar el vehículo');
-        
         showToast('Renta creada exitosamente', 'success');
         rentarModal?.hide();
-        // Recargar datos
         await loadVehicles();
         await loadMyRentals();
     } catch (err) {
@@ -245,7 +280,7 @@ async function completeRental(rentalId, vehicleId) {
     if (!confirm('¿Registrar la devolución del vehículo?')) return;
     try {
         await updateDocument(COLLECTIONS.RENTALS, rentalId, {
-            status: 'completed',
+            status:     'completed',
             returnDate: new Date()
         });
         await updateDocument(COLLECTIONS.VEHICLES, vehicleId, { status: 'available' });
@@ -275,47 +310,47 @@ async function loadMyRentals() {
             hasActiveRental = false;
             return;
         }
-        const active = myRentals.filter(r => r.status === 'active');
+        const active  = myRentals.filter(r => r.status === 'active');
         const history = myRentals.filter(r => r.status === 'completed');
         hasActiveRental = active.length > 0;
-        
+
         // Renta activa
         activeRentaBody.innerHTML = '';
         for (const rental of active) {
             const vehResult = await getDocumentById(COLLECTIONS.VEHICLES, rental.vehicleId);
-            const plate = vehResult.success ? vehResult.data.plate : 'Desconocido';
-            const start = rental.startDate.toDate().toLocaleDateString();
-            const end = rental.endDate.toDate().toLocaleDateString();
-            const row = activeRentaBody.insertRow();
+            const plate     = vehResult.success ? vehResult.data.plate : 'Desconocido';
+            const start     = rental.startDate.toDate().toLocaleDateString();
+            const end       = rental.endDate.toDate().toLocaleDateString();
+            const row       = activeRentaBody.insertRow();
             row.insertCell(0).textContent = plate;
             row.insertCell(1).textContent = start;
             row.insertCell(2).textContent = end;
             row.insertCell(3).textContent = `$${rental.totalCost.toFixed(2)}`;
-            const btnCell = row.insertCell(4);
+            const btnCell    = row.insertCell(4);
             const liberarBtn = document.createElement('button');
             liberarBtn.className = 'btn btn-sm btn-danger';
             liberarBtn.innerHTML = '<i class="bi bi-car-front"></i> Liberar';
-            liberarBtn.onclick = () => completeRental(rental.id, rental.vehicleId);
+            liberarBtn.onclick   = () => completeRental(rental.id, rental.vehicleId);
             btnCell.appendChild(liberarBtn);
         }
-        
+
         // Historial
         historialRentasBody.innerHTML = '';
         for (const rental of history) {
-            const vehResult = await getDocumentById(COLLECTIONS.VEHICLES, rental.vehicleId);
-            const plate = vehResult.success ? vehResult.data.plate : 'Desconocido';
-            const start = rental.startDate.toDate().toLocaleDateString();
-            const end = rental.endDate.toDate().toLocaleDateString();
+            const vehResult  = await getDocumentById(COLLECTIONS.VEHICLES, rental.vehicleId);
+            const plate      = vehResult.success ? vehResult.data.plate : 'Desconocido';
+            const start      = rental.startDate.toDate().toLocaleDateString();
+            const end        = rental.endDate.toDate().toLocaleDateString();
             const returnDate = rental.returnDate ? rental.returnDate.toDate().toLocaleDateString() : '-';
-            const row = historialRentasBody.insertRow();
+            const row        = historialRentasBody.insertRow();
             row.insertCell(0).textContent = plate;
             row.insertCell(1).textContent = start;
             row.insertCell(2).textContent = end;
             row.insertCell(3).textContent = `$${rental.totalCost.toFixed(2)}`;
             row.insertCell(4).textContent = returnDate;
         }
-        
-        if (active.length) activeRentaSection.classList.remove('d-none');
+
+        if (active.length)  activeRentaSection.classList.remove('d-none');
         if (history.length) historialRentasSection.classList.remove('d-none');
         rentasLoading.classList.add('d-none');
     } catch (err) {
@@ -328,9 +363,13 @@ async function loadMyRentals() {
 // ── Inicializar ──
 checkAuth(async (user) => {
     if (!user) { window.location.href = '../login.html'; return; }
-    navUserName.textContent = user.displayName || user.email;
+    currentUser = user;
     try {
         currentCustomerId = await getOrCreateCustomerId(user);
+
+        // Actualizar nombre en navbar (por si navbarLoaded ya se disparó antes)
+        updateNavbarName(currentUserName);
+
         await Promise.all([loadCategories(), loadVehicles(), loadMyRentals()]);
     } catch (err) {
         console.error(err);
@@ -339,4 +378,3 @@ checkAuth(async (user) => {
 });
 
 refreshRentasBtn?.addEventListener('click', loadMyRentals);
-logoutBtn?.addEventListener('click', async () => { await logoutUser(); window.location.href = '../login.html'; });

@@ -7,27 +7,47 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../assets/css/styles.css">
+  <script src="../assets/js/navbar-user.js" defer></script>
+  <style>
+    .vehicle-card {
+      border: 0;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .vehicle-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.13);
+    }
+    .vehicle-card .card-img-top {
+      height: 190px;
+      object-fit: cover;
+      width: 100%;
+    }
+    .vehicle-card .no-img {
+      height: 190px;
+      background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .vehicle-card .card-body {
+      padding: 1rem 1.1rem .9rem;
+    }
+    .vehicle-card .price-badge {
+      background: var(--bs-primary);
+      color: #fff;
+      border-radius: 8px;
+      padding: .25rem .65rem;
+      font-weight: 700;
+      font-size: .9rem;
+    }
+  </style>
 </head>
 <body class="dashboard-page">
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-    <div class="container">
-      <a class="navbar-brand fw-bold" href="../dashboard.html">
-        <i class="bi bi-car-front-fill me-2"></i>
-        RentCar Manager
-      </a>
-      <div class="d-flex align-items-center gap-2 ms-auto">
-        <span class="text-white small d-none d-md-inline">
-          <i class="bi bi-person-circle me-1"></i>
-          <span id="navUserName">Cliente</span>
-        </span>
-        <button id="logoutBtn" class="btn btn-outline-light btn-sm">
-          <i class="bi bi-box-arrow-right me-1"></i>
-          Cerrar sesión
-        </button>
-      </div>
-    </div>
-  </nav>
+  <div id="navbarContainer"></div>
 
   <main class="py-5">
     <div class="container">
@@ -35,16 +55,17 @@
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 class="fw-bold"><i class="bi bi-car-front text-primary me-2"></i>Vehículos disponibles</h2>
-          <p class="text-secondary">Selecciona un auto y elige las fechas para rentarlo</p>
+          <p class="text-secondary mb-0">Selecciona un auto y elige las fechas para rentarlo</p>
         </div>
       </div>
 
-      <div class="card info-card mb-4">
+      <!-- Filtros -->
+      <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-3">
           <div class="row g-3">
             <div class="col-md-8">
               <div class="input-group">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
                 <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Buscar por marca, modelo o placa">
               </div>
             </div>
@@ -59,68 +80,120 @@
 
       <div id="rentalsAlert" class="alert alert-danger d-none"></div>
 
+      <!-- Cargando -->
       <div id="loadingState" class="text-center py-5">
         <div class="spinner-border text-primary"></div>
-        <p class="mt-2">Cargando vehículos...</p>
+        <p class="mt-2 text-secondary">Cargando vehículos...</p>
       </div>
 
-      <div id="tableContainer" class="card info-card d-none">
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead class="table-light">
-                <tr><th class="ps-4">Vehículo</th><th>Año</th><th>Placa</th><th>Categoría</th><th>Precio/día</th><th class="text-end pe-4">Acción</th></tr>
-              </thead>
-              <tbody id="vehiclesBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <!-- Grid de tarjetas -->
+      <div id="vehiclesGrid" class="row g-4 d-none" id="tableContainer"></div>
+
+      <!-- Vacío -->
       <div id="emptyState" class="text-center py-5 d-none">
         <i class="bi bi-car-front fs-1 text-muted"></i>
         <p class="text-muted mt-2">No hay vehículos disponibles</p>
       </div>
 
       <hr class="my-5">
+
+      <!-- Mis rentas -->
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="h4"><i class="bi bi-journal-bookmark-fill"></i> Mis rentas</h3>
-        <button id="refreshRentasBtn" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-repeat"></i> Actualizar</button>
+        <h3 class="h4 fw-bold"><i class="bi bi-journal-bookmark-fill text-primary me-2"></i>Mis rentas</h3>
+        <button id="refreshRentasBtn" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-arrow-repeat me-1"></i>Actualizar
+        </button>
       </div>
+
       <div id="rentasLoading" class="text-center py-3 d-none">
         <div class="spinner-border spinner-border-sm text-primary"></div>
       </div>
+
       <div id="activeRentaSection" class="mb-4 d-none">
-        <div class="card border-primary">
-          <div class="card-header bg-primary text-white">Renta activa</div>
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-primary text-white fw-semibold rounded-top">
+            <i class="bi bi-car-front me-2"></i>Renta activa
+          </div>
           <div class="card-body p-0">
-            <table class="table mb-0"><thead><tr><th>Vehículo</th><th>Inicio</th><th>Fin</th><th>Costo</th><th>Acción</th></tr></thead><tbody id="activeRentaBody"></tbody></table>
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Vehículo</th>
+                  <th>Inicio</th>
+                  <th>Fin</th>
+                  <th>Costo</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="activeRentaBody"></tbody>
+            </table>
           </div>
         </div>
       </div>
+
       <div id="historialRentasSection" class="d-none">
-        <div class="card"><div class="card-header bg-light">Historial</div><div class="card-body p-0"><table class="table table-sm mb-0"><thead><tr><th>Vehículo</th><th>Inicio</th><th>Fin</th><th>Costo</th><th>Devuelto</th></tr></thead><tbody id="historialRentasBody"></tbody></table></div></div>
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-light fw-semibold rounded-top">
+            <i class="bi bi-clock-history me-2 text-secondary"></i>Historial
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Vehículo</th>
+                  <th>Inicio</th>
+                  <th>Fin</th>
+                  <th>Costo</th>
+                  <th>Devuelto</th>
+                </tr>
+              </thead>
+              <tbody id="historialRentasBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <div id="noRentasMsg" class="alert alert-info d-none">Aún no has realizado ninguna renta.</div>
+
+      <div id="noRentasMsg" class="alert alert-info d-none">
+        Aún no has realizado ninguna renta.
+      </div>
+
     </div>
   </main>
 
   <!-- Modal para rentar -->
   <div class="modal fade" id="rentarModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title"><i class="bi bi-calendar-plus"></i> Nueva renta</h5>
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-primary text-white border-0">
+          <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2"></i>Nueva renta</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body p-4">
           <div id="rentarAlert" class="alert alert-danger d-none"></div>
           <form id="rentaForm">
             <input type="hidden" id="modalVehicleId">
-            <div class="mb-3"><label class="form-label fw-bold">Vehículo</label><input type="text" id="modalVehicleName" class="form-control" readonly></div>
-            <div class="mb-3"><label for="modalStartDate" class="form-label">Fecha inicio</label><input type="date" id="modalStartDate" class="form-control" required></div>
-            <div class="mb-3"><label for="modalEndDate" class="form-label">Fecha fin</label><input type="date" id="modalEndDate" class="form-control" required></div>
-            <div class="mb-3 bg-light p-3 rounded"><label class="form-label fw-bold">Costo total</label><div class="fs-3 text-primary" id="modalTotalCost">$0.00</div><small>Se calcula automáticamente</small></div>
-            <button type="submit" id="confirmRentaBtn" class="btn btn-primary w-100">Confirmar renta</button>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Vehículo</label>
+              <input type="text" id="modalVehicleName" class="form-control bg-light" readonly>
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-semibold">Fecha inicio</label>
+                <input type="date" id="modalStartDate" class="form-control" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Fecha fin</label>
+                <input type="date" id="modalEndDate" class="form-control" required>
+              </div>
+            </div>
+            <div class="bg-light rounded p-3 mb-4 text-center">
+              <div class="text-secondary small mb-1">Costo total estimado</div>
+              <div class="fs-2 fw-bold text-primary" id="modalTotalCost">$0.00</div>
+              <small class="text-muted">Se calcula automáticamente</small>
+            </div>
+            <button type="submit" id="confirmRentaBtn" class="btn btn-primary w-100 btn-lg fw-semibold">
+              <i class="bi bi-check-circle me-2"></i>Confirmar renta
+            </button>
           </form>
         </div>
       </div>
