@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RentCar Manager | Tips de Viaje</title>
+  
+  <script src="./assets/js/theme-init.js"></script>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/styles.css">
+  
+  <script src="./assets/js/navbar-user.js" defer></script>
+  
+  <style>
+    .blog-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      background-color: #ffffff;
+    }
+    .blog-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.10) !important;
+    }
+    .blog-icon-wrap {
+      width: 54px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      font-size: 1.5rem;
+    }
+    [data-bs-theme="dark"] .blog-card {
+      background-color: #1e2130 !important;
+      border-color: rgba(255,255,255,0.08) !important;
+    }
+  </style>
+</head>
+<body class="dashboard-page">
+
+  <div id="navbarContainer"></div>
+
+  <main class="py-5 mb-4">
+    <div class="container" style="max-width: 1140px;">
+      
+      <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div>
+          <h2 class="fw-bold mb-1">
+            <i class="bi bi-newspaper text-primary me-2"></i>Tips de Viaje
+          </h2>
+          <p class="text-secondary mb-0">Recomendaciones, guías oficiales y consejos para una ruta segura</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        
+        <div class="col-md-6 col-lg-4">
+          <div class="card border-0 shadow-sm h-100 blog-card p-2">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="blog-icon-wrap bg-success bg-opacity-10 text-success">
+                  <i class="bi bi-shield-check"></i>
+                </div>
+                <span class="badge bg-light text-secondary border">Seguridad</span>
+              </div>
+              <h5 class="fw-bold mb-2">Ángeles Verdes: Prepara tu viaje</h5>
+              <p class="text-secondary small mb-4">La Secretaría de Turismo ofrece asistencia vial. Antes de salir, verifica niveles de aceite, líquido de frenos, anticongelante y el sistema eléctrico para prevenir incidentes en carretera.</p>
+              
+              <div class="mt-auto">
+                <a href="https://www.gob.mx/sectur/angelesverdes/articulos/prepara-tu-coche-para-un-viaje-largo?idiom=es" target="_blank" class="btn btn-outline-success btn-sm w-100 fw-semibold">
+                  Leer fuente oficial <i class="bi bi-box-arrow-up-right ms-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <div class="card border-0 shadow-sm h-100 blog-card p-2">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="blog-icon-wrap bg-primary bg-opacity-10 text-primary">
+                  <i class="bi bi-vinyl"></i>
+                </div>
+                <span class="badge bg-light text-secondary border">Mantenimiento</span>
+              </div>
+              <h5 class="fw-bold mb-2">Checklist de llantas por Michelin</h5>
+              <p class="text-secondary small mb-4">Una presión inadecuada aumenta el consumo de gasolina y el riesgo de ponchaduras. Aprende a inspeccionar el desgaste de la banda de rodamiento y la alineación correcta.</p>
+              
+              <div class="mt-auto">
+                <a href="https://www.michelin.com.mx/auto/consejos/cuidado-de-las-llantas/viaje-por-carretera-checklist" target="_blank" class="btn btn-outline-primary btn-sm w-100 fw-semibold">
+                  Ver guía en Michelin <i class="bi bi-box-arrow-up-right ms-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <div class="card border-0 shadow-sm h-100 blog-card p-2">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="blog-icon-wrap bg-danger bg-opacity-10 text-danger">
+                  <i class="bi bi-cone-striped"></i>
+                </div>
+                <span class="badge bg-light text-secondary border">Prevención</span>
+              </div>
+              <h5 class="fw-bold mb-2">7 Tips de seguridad vial por Toyota</h5>
+              <p class="text-secondary small mb-4">Desde la planificación de descansos hasta el manejo bajo condiciones climáticas adversas. Conoce las recomendaciones de los fabricantes para proteger a tus pasajeros en trayectos largos.</p>
+              
+              <div class="mt-auto">
+                <a href="https://www.toyota.com/espanol/alquilar/car-tips/7-Road-Trip-Safety-Tips-for-Your-Next-Adventure.html" target="_blank" class="btn btn-outline-danger btn-sm w-100 fw-semibold">
+                  Leer artículo en Toyota <i class="bi bi-box-arrow-up-right ms-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <div class="card border-0 shadow-sm h-100 blog-card p-2">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="blog-icon-wrap bg-warning bg-opacity-10 text-warning">
+                  <i class="bi bi-fuel-pump"></i>
+                </div>
+                <span class="badge bg-light text-secondary border">Economía</span>
+              </div>
+              <h5 class="fw-bold mb-2">Ahorro de combustible en carretera</h5>
+              <p class="text-secondary small mb-4">Mantener una velocidad constante, usar el control de crucero y evitar cargar exceso de peso en el maletero puede mejorar el rendimiento del combustible hasta en un 15%.</p>
+              
+              <div class="mt-auto">
+                <button class="btn btn-light border btn-sm w-100 fw-semibold text-secondary" disabled>
+                  Contenido interno
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <div class="card border-0 shadow-sm h-100 blog-card p-2">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="blog-icon-wrap bg-info bg-opacity-10 text-info">
+                  <i class="bi bi-file-earmark-text"></i>
+                </div>
+                <span class="badge bg-light text-secondary border">Legal</span>
+              </div>
+              <h5 class="fw-bold mb-2">Documentación indispensable</h5>
+              <p class="text-secondary small mb-4">Asegúrate de llevar siempre tu licencia de conducir vigente, una copia del contrato de renta y el número de póliza de seguro a la mano. Revisar esto te evitará multas en retenes.</p>
+              
+              <div class="mt-auto">
+                <button class="btn btn-light border btn-sm w-100 fw-semibold text-secondary" disabled>
+                  Contenido interno
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <div class="card border-0 shadow-sm h-100 blog-card p-2">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="blog-icon-wrap" style="background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                  <i class="bi bi-geo-alt"></i>
+                </div>
+                <span class="badge bg-light text-secondary border">Turismo</span>
+              </div>
+              <h5 class="fw-bold mb-2">Rutas hacia Pueblos Mágicos</h5>
+              <p class="text-secondary small mb-4">Descubre paradas obligatorias, gastronomía local y los tramos carreteros con los paisajes más espectaculares. Te ayudamos a armar un itinerario inolvidable.</p>
+              
+              <div class="mt-auto">
+                <button class="btn btn-light border btn-sm w-100 fw-semibold text-secondary" disabled>
+                  Contenido interno
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
