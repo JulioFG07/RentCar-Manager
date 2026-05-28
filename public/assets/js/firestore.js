@@ -9,7 +9,8 @@ export const COLLECTIONS = {
     CUSTOMERS: "customers",
     RENTALS: "rentals",
     FAVORITES: "favorites",
-    REVIEWS: "reviews"
+    REVIEWS: "reviews",
+    TIPS: "tips"
 };
 
 function createBaseData() {
