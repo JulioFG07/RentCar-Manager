@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RentCar Manager | Inicio</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./assets/css/styles.css">
+
+  <style>
+    :root {
+      --dark: #0a0a0f;
+      --accent: #2563eb;
+      --accent-light: #3b82f6;
+      --gold: #f59e0b;
+      --surface: #111118;
+      --glass: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+    }
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body {
+      background: var(--dark);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      overflow-x:hidden;
+    }
+
+    h1,h2,h3,h4 {
+      font-family: 'Syne', sans-serif;
+    }
+
+    /* NAVBAR */
+
+    .navbar-custom{
+      background: rgba(10,10,15,.75);
+      backdrop-filter: blur(12px);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+
+    .navbar-brand{
+      font-family:'Syne', sans-serif;
+      font-weight:800;
+      font-size:1.3rem;
+      color:#fff !important;
+    }
+
+    .nav-link{
+      color:rgba(255,255,255,.7) !important;
+      transition:.2s;
+    }
+
+    .nav-link:hover{
+      color:#fff !important;
+    }
+
+    .btn-login{
+      border:1px solid rgba(255,255,255,.15);
+      color:#fff;
+      border-radius:10px;
+      padding:.55rem 1.2rem;
+      text-decoration:none;
+      transition:.2s;
+    }
+
+    .btn-login:hover{
+      background:rgba(255,255,255,.08);
+    }
+
+    .btn-register{
+      background:var(--accent);
+      color:#fff;
+      border-radius:10px;
+      padding:.55rem 1.2rem;
+      text-decoration:none;
+      transition:.2s;
+    }
+
+    .btn-register:hover{
+      background:var(--accent-light);
+      color:#fff;
+    }
+
+    /* HERO */
+
+    .hero {
+      min-height: 100vh;
+      position: relative;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      background: var(--dark);
+      padding-top:80px;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 70% 50%, rgba(37,99,235,.18) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(245,158,11,.08) 0%, transparent 60%);
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap:.5rem;
+      background: rgba(37,99,235,.15);
+      border: 1px solid rgba(37,99,235,.3);
+      color: #93c5fd;
+      padding: .35rem 1rem;
+      border-radius: 100px;
+      font-size: .8rem;
+      font-weight: 500;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .hero-title {
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -.02em;
+    }
+
+    .hero-title .accent {
+      color: var(--accent-light);
+    }
+
+    .hero-title .gold {
+      color: var(--gold);
+    }
+
+    .hero-sub {
+      color: rgba(255,255,255,.55);
+      font-size: 1.1rem;
+      font-weight: 300;
+      max-width: 550px;
+      line-height: 1.7;
+    }
+
+    .btn-hero-primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: .9rem 2rem;
+      border-radius: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: .2s;
+      display:inline-flex;
+      align-items:center;
+      gap:.5rem;
+    }
+
+    .btn-hero-primary:hover {
+      background: var(--accent-light);
+      color:#fff;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(37,99,235,.4);
+    }
+
+    .btn-hero-ghost {
+      background: transparent;
+      color: rgba(255,255,255,.75);
+      border: 1px solid rgba(255,255,255,.15);
+      padding: .9rem 2rem;
+      border-radius: 12px;
+      font-weight: 500;
+      text-decoration:none;
+      transition:.2s;
+    }
+
+    .btn-hero-ghost:hover {
+      color:#fff;
+      border-color:rgba(255,255,255,.35);
+      background:rgba(255,255,255,.05);
+    }
+
+    .hero-car-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-car-glow {
+      position: absolute;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle, rgba(37,99,235,.3) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-car-icon {
+      font-size: 11rem;
+      color: rgba(255,255,255,.12);
+      position: relative;
+      filter: drop-shadow(0 0 40px rgba(37,99,235,.4));
+    }
+
+    /* FEATURES */
+
+    .features-strip {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .feature-item {
+      padding: 2rem 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .feature-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-title {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: .25rem;
+    }
+
+    .feature-desc {
+      color: rgba(255,255,255,.45);
+      font-size: .85rem;
+    }
+
+    /* SECTIONS */
+
+    .section-dark {
+      background: var(--dark);
+      padding: 6rem 0;
+    }
+
+    .section-surface {
+      background: var(--surface);
+      padding: 6rem 0;
+    }
+
+    .section-label {
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--accent-light);
+      margin-bottom: .75rem;
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -.02em;
+    }
+
+    .section-sub {
+      color: rgba(255,255,255,.5);
+      font-weight: 300;
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+
+    /* CARDS */
+
+    .step-card,
+    .why-card,
+    .testimonial-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      height:100%;
+      transition:.25s;
+    }
+
+    .step-card:hover,
+    .why-card:hover,
+    .testimonial-card:hover{
+      transform:translateY(-5px);
+      border-color:rgba(37,99,235,.35);
+    }
+
+    .step-num{
+      font-size:3rem;
+      font-weight:800;
+      color:rgba(37,99,235,.25);
+      margin-bottom:.75rem;
+    }
+
+    .step-title,
+    .why-title{
+      font-weight:700;
+      margin-bottom:.5rem;
+    }
+
+    .step-desc,
+    .why-desc{
+      color:rgba(255,255,255,.45);
+      line-height:1.6;
+    }
+
+    .why-icon{
+      width:50px;
+      height:50px;
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:1rem;
+      font-size:1.2rem;
+    }
+
+    .stars{
+      color:var(--gold);
+      margin-bottom:1rem;
+    }
+
+    .testimonial-quote{
+      color:rgba(255,255,255,.75);
+      line-height:1.7;
+    }
+
+    .testimonial-author{
+      font-weight:700;
+    }
+
+    .testimonial-role{
+      color:rgba(255,255,255,.4);
+      font-size:.85rem;
+    }
+
+    /* CTA */
+
+    .cta-section{
+      background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%);
+      padding:6rem 0;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .cta-title{
+      font-size:clamp(2rem,4vw,3rem);
+      font-weight:800;
+    }
+
+    /* FOOTER */
+
+    footer{
+      background:#07070b;
+      border-top:1px solid rgba(255,255,255,.08);
+      padding:2rem 0;
+      color:rgba(255,255,255,.45);
+    }
+
+    /* ANIMATIONS */
+
+    @keyframes fadeUp{
+      from{
+        opacity:0;
+        transform:translateY(24px);
+      }
+      to{
+        opacity:1;
+        transform:translateY(0);
+      }
+    }
+
+    .fade-up{
+      animation:fadeUp .6s ease both;
+    }
+
+    .delay-1{ animation-delay:.1s; }
+    .delay-2{ animation-delay:.2s; }
+    .delay-3{ animation-delay:.3s; }
+    .delay-4{ animation-delay:.4s; }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top navbar-custom">
+    <div class="container">
+
+      <a class="navbar-brand" href="#">
+        <i class="bi bi-car-front-fill me-2"></i>
+        RentCar
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+
+        <ul class="navbar-nav mx-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="#">Inicio</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="#how">Cómo funciona</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="#benefits">Beneficios</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="#testimonials">Opiniones</a>
+          </li>
+        </ul>
+
+        <div class="d-flex gap-2">
+          <a href="./login.html" class="btn-login">
+            Iniciar sesión
+          </a>
+
+          <a href="./register.html" class="btn-register">
+            Registrarse
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+
+  <section class="hero">
+
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+
+    <div class="container position-relative">
+
+      <div class="row align-items-center g-5">
+
+        <div class="col-lg-7">
+
+          <div class="hero-tag fade-up mb-4">
+            <i class="bi bi-shield-check-fill"></i>
+            Renta segura y sin complicaciones
+          </div>
+
+          <h1 class="hero-title fade-up delay-1 mb-4">
+            Renta autos
+            <span class="accent">rápido</span>
+            y
+            <span class="gold">seguro</span>
+          </h1>
+
+          <p class="hero-sub fade-up delay-2 mb-5">
+            Explora nuestra flota premium, reserva en minutos y disfruta tu viaje con total comodidad y confianza.
+          </p>
+
+          <div class="d-flex flex-wrap gap-3 fade-up delay-3">
+
+            <a href="./register.html" class="btn-hero-primary">
+              <i class="bi bi-car-front-fill"></i>
+              Comenzar ahora
+            </a>
+
+            <a href="./modules/rentals.html" class="btn-hero-ghost">
+              Ver vehículos
+            </a>
+
+          </div>
+        </div>
+
+        <div class="col-lg-5 d-none d-lg-flex justify-content-center fade-up delay-4">
+
+          <div class="hero-car-wrap">
+            <div class="hero-car-glow"></div>
+
+            <i class="bi bi-car-front-fill hero-car-icon"></i>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- FEATURES -->
+
+  <section class="features-strip">
+
+    <div class="container-fluid px-0">
+
+      <div class="row g-0">
+
+        <div class="col-6 col-md-3">
+          <div class="feature-item">
+            <div class="feature-icon bg-primary bg-opacity-10 text-primary">
+              <i class="bi bi-lightning-charge-fill"></i>
+            </div>
+
+            <div class="feature-title">Reserva express</div>
+
+            <div class="feature-desc">
+              Lista en menos de 3 minutos
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <div class="feature-item">
+            <div class="feature-icon" style="background:rgba(16,185,129,.1);color:#10b981;">
+              <i class="bi bi-shield-fill-check"></i>
+            </div>
+
+            <div class="feature-title">100% seguro</div>
+
+            <div class="feature-desc">
+              Vehículos asegurados
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <div class="feature-item">
+            <div class="feature-icon" style="background:rgba(245,158,11,.1);color:#f59e0b;">
+              <i class="bi bi-headset"></i>
+            </div>
+
+            <div class="feature-title">Soporte 24/7</div>
+
+            <div class="feature-desc">
+              Asistencia todo el día
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <div class="feature-item">
+            <div class="feature-icon" style="background:rgba(139,92,246,.1);color:#8b5cf6;">
+              <i class="bi bi-geo-alt-fill"></i>
+            </div>
+
+            <div class="feature-title">Entrega flexible</div>
+
+            <div class="feature-desc">
+              Donde lo necesites
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- COMO FUNCIONA -->
+
+  <section class="section-dark" id="how">
+
+    <div class="container">
+
+      <div class="row justify-content-center mb-5">
+
+        <div class="col-lg-6 text-center">
+
+          <div class="section-label">
+            Proceso simple
+          </div>
+
+          <h2 class="section-title mb-3">
+            ¿Cómo funciona?
+          </h2>
+
+          <p class="section-sub">
+            Rentar un vehículo nunca fue tan fácil.
+          </p>
+
+        </div>
+
+      </div>
+
+      <div class="row g-4">
+
+        <div class="col-md-4">
+          <div class="step-card">
+
+            <div class="step-num">01</div>
+
+            <div class="step-title">
+              Elige tu vehículo
+            </div>
+
+            <p class="step-desc">
+              Encuentra el auto perfecto para tu viaje.
+            </p>
+
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="step-card">
+
+            <div class="step-num">02</div>
+
+            <div class="step-title">
+              Selecciona fechas
+            </div>
+
+            <p class="step-desc">
+              Calcula automáticamente el costo total.
+            </p>
+
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="step-card">
+
+            <div class="step-num">03</div>
+
+            <div class="step-title">
+              Confirma y maneja
+            </div>
+
+            <p class="step-desc">
+              Reserva y disfruta tu experiencia.
+            </p>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- BENEFICIOS -->
+
+  <section class="section-surface" id="benefits">
+
+    <div class="container">
+
+      <div class="row align-items-center g-5">
+
+        <div class="col-lg-5">
+
+          <div class="section-label">
+            Nuestra diferencia
+          </div>
+
+          <h2 class="section-title mb-4">
+            ¿Por qué elegirnos?
+          </h2>
+
+          <p class="section-sub">
+            Calidad, seguridad y servicio premium en cada renta.
+          </p>
+
+        </div>
+
+        <div class="col-lg-7">
+
+          <div class="row g-3">
+
+            <div class="col-6">
+              <div class="why-card">
+
+                <div class="why-icon" style="background:rgba(37,99,235,.15);color:#60a5fa;">
+                  <i class="bi bi-car-front-fill"></i>
+                </div>
+
+                <div class="why-title">
+                  Flota variada
+                </div>
+
+                <p class="why-desc">
+                  Sedanes, SUVs y pickups.
+                </p>
+
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="why-card">
+
+                <div class="why-icon" style="background:rgba(245,158,11,.15);color:#fbbf24;">
+                  <i class="bi bi-star-fill"></i>
+                </div>
+
+                <div class="why-title">
+                  Alta calificación
+                </div>
+
+                <p class="why-desc">
+                  Clientes satisfechos con nuestro servicio.
+                </p>
+
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="why-card">
+
+                <div class="why-icon" style="background:rgba(16,185,129,.15);color:#34d399;">
+                  <i class="bi bi-currency-dollar"></i>
+                </div>
+
+                <div class="why-title">
+                  Precios justos
+                </div>
+
+                <p class="why-desc">
+                  Sin costos ocultos.
+                </p>
+
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="why-card">
+
+                <div class="why-icon" style="background:rgba(139,92,246,.15);color:#a78bfa;">
+                  <i class="bi bi-arrow-repeat"></i>
+                </div>
+
+                <div class="why-title">
+                  Devolución fácil
+                </div>
+
+                <p class="why-desc">
+                  Procesos rápidos y sencillos.
+                </p>
+
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- TESTIMONIOS -->
+
+  <section class="section-dark" id="testimonials">
+
+    <div class="container">
+
+      <div class="row justify-content-center mb-5">
+
+        <div class="col-lg-6 text-center">
+
+          <div class="section-label">
+            Opiniones
+          </div>
+
+          <h2 class="section-title mb-3">
+            Lo que dicen nuestros clientes
+          </h2>
+
+        </div>
+
+      </div>
+
+      <div class="row g-4">
+
+        <div class="col-md-4">
+          <div class="testimonial-card">
+
+            <div class="stars">★★★★★</div>
+
+            <p class="testimonial-quote">
+              “Excelente servicio y autos impecables.”
+            </p>
+
+            <div class="testimonial-author">
+              María G.
+            </div>
+
+            <div class="testimonial-role">
+              Cliente frecuente
+            </div>
+
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="testimonial-card">
+
+            <div class="stars">★★★★★</div>
+
+            <p class="testimonial-quote">
+              “El proceso fue rápido y sencillo.”
+            </p>
+
+            <div class="testimonial-author">
+              Carlos M.
+            </div>
+
+            <div class="testimonial-role">
+              Viajero de negocios
+            </div>
+
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="testimonial-card">
+
+            <div class="stars">★★★★☆</div>
+
+            <p class="testimonial-quote">
+              “Gran variedad de vehículos y buenos precios.”
+            </p>
+
+            <div class="testimonial-author">
+              Ana R.
+            </div>
+
+            <div class="testimonial-role">
+              Nueva usuaria
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- CTA -->
+
+  <section class="cta-section">
+
+    <div class="container position-relative">
+
+      <div class="row justify-content-center text-center">
+
+        <div class="col-lg-7">
+
+          <div class="section-label text-light">
+            ¿Listo?
+          </div>
+
+          <h2 class="cta-title text-white mb-4">
+            Tu próximo viaje empieza aquí
+          </h2>
+
+          <p class="mb-5" style="color:rgba(255,255,255,.7);font-size:1.1rem;">
+            Reserva en minutos y conduce sin complicaciones.
+          </p>
+
+          <div class="d-flex justify-content-center gap-3 flex-wrap">
+
+            <a href="./register.html" class="btn-hero-primary" style="background:#fff;color:#1d4ed8;">
+              <i class="bi bi-car-front-fill"></i>
+              Rentar ahora
+            </a>
+
+            <a href="./login.html" class="btn-hero-ghost">
+              Iniciar sesión
+            </a>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- FOOTER -->
+
+  <footer>
+
+    <div class="container text-center">
+
+      <p class="mb-2">
+        © 2026 RentCar Manager
+      </p>
+
+      <small>
+        Plataforma de renta de vehículos moderna y segura.
+      </small>
+
+    </div>
+
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
