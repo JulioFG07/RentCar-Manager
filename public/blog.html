@@ -3,15 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RentCar Manager | Tips y Recomendaciones</title>
-  
+  <title>RentCar Manager | Tips de Viaje</title>
   <script src="./assets/js/theme-init.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./assets/css/styles.css">
   <script src="./assets/js/navbar-user.js" defer></script>
-  
   <style>
     .blog-card { transition: transform 0.2s ease, box-shadow 0.2s ease; background-color: #ffffff; }
     .blog-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,0.10) !important; }
@@ -20,121 +18,28 @@
   </style>
 </head>
 <body class="dashboard-page">
-
   <div id="navbarContainer"></div>
 
   <main class="py-5 mb-4">
     <div class="container" style="max-width: 1140px;">
       
+      <!-- Sección: Tips para Rentar -->
       <div class="mb-5">
         <h2 class="fw-bold mb-1"><i class="bi bi-key text-primary me-2"></i>Tips para Rentar</h2>
         <p class="text-secondary mb-4">Todo lo que necesitas saber antes de firmar un contrato de renta.</p>
-        
-        <div class="row g-4">
-          <div class="col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm h-100 blog-card p-2">
-              <div class="card-body d-flex flex-column">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <div class="blog-icon-wrap bg-info bg-opacity-10 text-info"><i class="bi bi-file-earmark-text"></i></div>
-                  <span class="badge bg-light text-secondary border">Legal</span>
-                </div>
-                <h5 class="fw-bold mb-2">Lo que debes saber antes de rentar</h5>
-                <p class="text-secondary small mb-4">Conoce qué aspectos del contrato debes revisar, cómo documentar el vehículo y evitar cobros indebidos al entregar.</p>
-                <div class="mt-auto">
-                  <a href="https://www.gob.mx/profeco/documentos/lo-que-debes-saber-antes-de-rentar-un-automovil?state=draft" target="_blank" class="btn btn-outline-info w-100 fw-semibold btn-sm">Fuente: Profeco <i class="bi bi-box-arrow-up-right ms-1"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm h-100 blog-card p-2">
-              <div class="card-body d-flex flex-column">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <div class="blog-icon-wrap bg-success bg-opacity-10 text-success"><i class="bi bi-piggy-bank"></i></div>
-                  <span class="badge bg-light text-secondary border">Finanzas</span>
-                </div>
-                <h5 class="fw-bold mb-2">5 Tips para ahorrar al rentar</h5>
-                <p class="text-secondary small mb-4">Estrategias clave para no gastar de más. Aprende sobre políticas de combustible y cobros por conductor adicional.</p>
-                <div class="mt-auto">
-                  <a href="https://www.toyota.com/espanol/alquilar/car-tips/5-Money-Saving-Rental-Car-Tips.html" target="_blank" class="btn btn-outline-success w-100 fw-semibold btn-sm">Fuente: Toyota <i class="bi bi-box-arrow-up-right ms-1"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm h-100 blog-card p-2">
-              <div class="card-body d-flex flex-column">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <div class="blog-icon-wrap bg-secondary bg-opacity-10 text-secondary"><i class="bi bi-tools"></i></div>
-                  <span class="badge bg-light text-secondary border">Mecánica</span>
-                </div>
-                <h5 class="fw-bold mb-2">Revisa el auto antes de viajar</h5>
-                <p class="text-secondary small mb-4">Volkswagen te guía paso a paso para verificar aceite, líquido limpiaparabrisas y frenos antes de salir a carretera.</p>
-                <div class="mt-auto">
-                  <a href="https://www.vw.com.mx/es/experiencia/tips/como-revisar-tu-auto-vacaciones.html" target="_blank" class="btn btn-outline-secondary w-100 fw-semibold btn-sm">Fuente: VW <i class="bi bi-box-arrow-up-right ms-1"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div id="tipsRentaGrid" class="row g-4">
+          <div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
         </div>
       </div>
 
       <hr class="my-5 border-secondary opacity-25">
 
+      <!-- Sección: Tips de Viaje -->
       <div>
         <h2 class="fw-bold mb-1"><i class="bi bi-geo-alt text-success me-2"></i>Tips de Viaje</h2>
         <p class="text-secondary mb-4">Recomendaciones para una ruta segura y disfrutable.</p>
-        
-        <div class="row g-4">
-          <div class="col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm h-100 blog-card p-2">
-              <div class="card-body d-flex flex-column">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <div class="blog-icon-wrap bg-warning bg-opacity-10 text-warning"><i class="bi bi-cone-striped"></i></div>
-                  <span class="badge bg-light text-secondary border">Seguridad</span>
-                </div>
-                <h5 class="fw-bold mb-2">Seguridad en Carretera</h5>
-                <p class="text-secondary small mb-4">Bridgestone te enseña a revisar la presión correcta, evitar distracciones y preparar un kit de emergencia.</p>
-                <div class="mt-auto">
-                  <a href="https://www.bridgestoneamericas.com/es_US/company/safety/driving-safely/road-trip-safety-tips" target="_blank" class="btn btn-warning text-dark w-100 fw-semibold btn-sm">Fuente: Bridgestone <i class="bi bi-box-arrow-up-right ms-1"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm h-100 blog-card p-2">
-              <div class="card-body d-flex flex-column">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <div class="blog-icon-wrap bg-primary bg-opacity-10 text-primary"><i class="bi bi-shield-check"></i></div>
-                  <span class="badge bg-light text-secondary border">Seguros</span>
-                </div>
-                <h5 class="fw-bold mb-2">Checklist de Seguros</h5>
-                <p class="text-secondary small mb-4">BBVA te explica cómo verificar la póliza, asistencia legal y qué hacer en caso de un siniestro vial.</p>
-                <div class="mt-auto">
-                  <a href="https://www.bbva.mx/educacion-financiera/seguros/seguro-auto-checklist-antes-un-viaje-en-carretera.html" target="_blank" class="btn btn-outline-primary w-100 fw-semibold btn-sm">Fuente: BBVA <i class="bi bi-box-arrow-up-right ms-1"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm h-100 blog-card p-2">
-              <div class="card-body d-flex flex-column">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <div class="blog-icon-wrap bg-light text-dark border"><i class="bi bi-check2-circle"></i></div>
-                  <span class="badge bg-light text-secondary border">Recomendaciones</span>
-                </div>
-                <h5 class="fw-bold mb-2">Claves para un buen viaje</h5>
-                <p class="text-secondary small mb-4">Resumen sobre la actitud al volante y la preparación mental para disfrutar del camino sin estrés.</p>
-                <div class="mt-auto">
-                  <a href="https://www.gwm.cl/blog/buen-viaje-en-auto/" target="_blank" class="btn btn-light border text-dark w-100 fw-semibold btn-sm">Fuente: GWM <i class="bi bi-box-arrow-up-right ms-1"></i></a>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div id="tipsViajeGrid" class="row g-4">
+          <div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
         </div>
       </div>
 
@@ -142,8 +47,6 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  
   <script type="module" src="./assets/js/blog.js"></script>
-
 </body>
 </html>
