@@ -470,7 +470,8 @@ const loadNavbar = async (user) => {
             './dashboard.html':        '../dashboard.html',
             './modules/rentals.html':  './rentals.html',
             './modules/reviews.html':  './reviews.html',
-            './profile.html':          '../profile.html'
+            './profile.html':          '../profile.html',
+            './blog.html':             '../blog.html'
         };
         document.getElementById('navbarContainer').querySelectorAll('a[href]').forEach(a => {
             const fixed = fixMap[a.getAttribute('href')];
