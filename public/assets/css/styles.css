@@ -568,3 +568,82 @@ body.dashboard-page{
 [data-bs-theme="dark"] .profile-reviews-list::-webkit-scrollbar-thumb {
     background-color: rgba(148,163,184,.2);
 }
+
+/* =========================================================
+   NOTIFICACIONES - Dropdown y badge
+========================================================= */
+
+.notification-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 320px;
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 1050;
+    margin-top: 0.5rem;
+}
+
+.notification-dropdown .dropdown-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 500;
+    background-color: transparent;
+}
+
+.notification-list {
+    max-height: 350px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.notification-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Modo oscuro */
+[data-bs-theme="dark"] .notification-dropdown {
+    background-color: #1e2130;
+    border-color: rgba(255,255,255,.08);
+}
+
+[data-bs-theme="dark"] .notification-item {
+    border-bottom-color: rgba(255,255,255,.06);
+}
+
+[data-bs-theme="dark"] .notification-item:hover {
+    background-color: rgba(255,255,255,.03);
+}
+
+[data-bs-theme="dark"] .notification-dropdown .dropdown-header {
+    border-bottom-color: rgba(255,255,255,.08);
+    color: #e2e8f0;
+}
+
+/* Ajuste del badge para que no se desplace mal */
+#notificationBtn .position-absolute {
+    transform: translate(25%, -25%);
+}
+
+/* Color del texto/ícono del botón de notificaciones según tema */
+#notificationBtn {
+    color: #000 !important;      /* Modo claro: negro */
+}
+
+[data-bs-theme="dark"] #notificationBtn {
+    color: #fff !important;      /* Modo oscuro: blanco */
+}
+
+
+#notificationBtn:hover {
+    color: inherit !important;
+    background-color: rgba(255, 255, 255, 0.1); 
+}
