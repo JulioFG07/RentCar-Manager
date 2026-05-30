@@ -387,3 +387,263 @@ body.dashboard-page{
     }
 
 }
+
+/* =========================================================
+   9. PERFIL — Lista de reseñas en sidebar con scroll
+========================================================= */
+
+.profile-reviews-list {
+    max-height: 620px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100,116,139,.3) transparent;
+}
+
+.profile-reviews-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.profile-reviews-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.profile-reviews-list::-webkit-scrollbar-thumb {
+    background-color: rgba(100,116,139,.3);
+    border-radius: 4px;
+}
+
+/* =========================================================
+   10. MODO OSCURO
+   Corrige los elementos con colores fijos que no responden
+   automáticamente al data-bs-theme="dark" de Bootstrap
+========================================================= */
+
+[data-bs-theme="dark"] body,
+[data-bs-theme="dark"] body.dashboard-page,
+[data-bs-theme="dark"] body.vh-100 {
+    background-color: #0f1117 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Cards */
+[data-bs-theme="dark"] .card {
+    background-color: #1e2130 !important;
+    border-color: rgba(255,255,255,.08) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,.3) !important;
+}
+
+/* Inputs */
+[data-bs-theme="dark"] .form-control {
+    background-color: #2a2f45 !important;
+    color: #e2e8f0 !important;
+    border-color: rgba(255,255,255,.12) !important;
+}
+
+[data-bs-theme="dark"] .form-control:focus {
+    background-color: #2a2f45 !important;
+    color: #e2e8f0 !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 4px rgba(59,130,246,.25) !important;
+}
+
+[data-bs-theme="dark"] .form-control:read-only {
+    background-color: #1e2130 !important;
+}
+
+/* Labels flotantes */
+[data-bs-theme="dark"] .form-floating > label {
+    color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] .form-floating > .form-control:focus ~ label,
+[data-bs-theme="dark"] .form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: #60a5fa !important;
+}
+
+/* Input group */
+[data-bs-theme="dark"] .input-group-text {
+    background-color: #2a2f45 !important;
+    border-color: rgba(255,255,255,.12) !important;
+    color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] .form-select {
+    background-color: #2a2f45 !important;
+    color: #e2e8f0 !important;
+    border-color: rgba(255,255,255,.12) !important;
+}
+
+/* Tablas */
+[data-bs-theme="dark"] .table {
+    --bs-table-bg: transparent;
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .table-light {
+    --bs-table-bg: rgba(255,255,255,.04) !important;
+    color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] .table-hover > tbody > tr:hover > * {
+    background-color: rgba(255,255,255,.04) !important;
+}
+
+[data-bs-theme="dark"] .table-secondary {
+    --bs-table-bg: rgba(255,255,255,.03) !important;
+}
+
+/* Loading screen */
+[data-bs-theme="dark"] .loading-screen {
+    background: #0f1117 !important;
+}
+
+/* Dashboard hero */
+[data-bs-theme="dark"] .welcome-name {
+    color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .hero-label,
+[data-bs-theme="dark"] .hero-description,
+[data-bs-theme="dark"] .stat-label {
+    color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] .stat-number {
+    color: #f1f5f9 !important;
+}
+
+/* Badges */
+[data-bs-theme="dark"] .badge.bg-light {
+    background-color: rgba(255,255,255,.1) !important;
+    color: #cbd5e1 !important;
+}
+
+/* Modales */
+[data-bs-theme="dark"] .modal-content {
+    background-color: #1e2130 !important;
+    border-color: rgba(255,255,255,.08) !important;
+}
+
+[data-bs-theme="dark"] .modal-header,
+[data-bs-theme="dark"] .modal-footer {
+    border-color: rgba(255,255,255,.08) !important;
+}
+
+/* Alertas */
+[data-bs-theme="dark"] .alert-warning {
+    background-color: rgba(245,158,11,.15) !important;
+    color: #fcd34d !important;
+}
+
+/* Textos secundarios */
+[data-bs-theme="dark"] .text-secondary {
+    color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] .text-muted {
+    color: #64748b !important;
+}
+
+/* Bordes */
+[data-bs-theme="dark"] .border-bottom,
+[data-bs-theme="dark"] .border {
+    border-color: rgba(255,255,255,.08) !important;
+}
+
+/* Dropdown / card header */
+[data-bs-theme="dark"] .card-header {
+    border-color: rgba(255,255,255,.08) !important;
+}
+
+[data-bs-theme="dark"] .card-header.bg-light {
+    background-color: rgba(255,255,255,.05) !important;
+    color: #94a3b8 !important;
+}
+
+/* Scrollbar modo oscuro */
+[data-bs-theme="dark"] .profile-reviews-list {
+    scrollbar-color: rgba(148,163,184,.2) transparent;
+}
+
+[data-bs-theme="dark"] .profile-reviews-list::-webkit-scrollbar-thumb {
+    background-color: rgba(148,163,184,.2);
+}
+
+/* =========================================================
+   NOTIFICACIONES - Dropdown y badge
+========================================================= */
+
+.notification-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 320px;
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 1050;
+    margin-top: 0.5rem;
+}
+
+.notification-dropdown .dropdown-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 500;
+    background-color: transparent;
+}
+
+.notification-list {
+    max-height: 350px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.notification-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Modo oscuro */
+[data-bs-theme="dark"] .notification-dropdown {
+    background-color: #1e2130;
+    border-color: rgba(255,255,255,.08);
+}
+
+[data-bs-theme="dark"] .notification-item {
+    border-bottom-color: rgba(255,255,255,.06);
+}
+
+[data-bs-theme="dark"] .notification-item:hover {
+    background-color: rgba(255,255,255,.03);
+}
+
+[data-bs-theme="dark"] .notification-dropdown .dropdown-header {
+    border-bottom-color: rgba(255,255,255,.08);
+    color: #e2e8f0;
+}
+
+/* Ajuste del badge para que no se desplace mal */
+#notificationBtn .position-absolute {
+    transform: translate(25%, -25%);
+}
+
+/* Color del texto/ícono del botón de notificaciones según tema */
+#notificationBtn {
+    color: #000 !important;      /* Modo claro: negro */
+}
+
+[data-bs-theme="dark"] #notificationBtn {
+    color: #fff !important;      /* Modo oscuro: blanco */
+}
+
+
+#notificationBtn:hover {
+    color: inherit !important;
+    background-color: rgba(255, 255, 255, 0.1); 
+}

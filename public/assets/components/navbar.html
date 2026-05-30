@@ -27,15 +27,31 @@
           <a class="nav-link" href="./customers.html" data-page="customers">
             <i class="bi bi-people me-1"></i>Clientes
           </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="./reviews.html" data-page="reviews">
+            <i class="bi bi-star me-1"></i>Reseñas
+          </a>
+        </li>
       </ul>
 
-      <!-- Usuario y logout -->
+      <!-- Usuario, modo oscuro y logout -->
       <div class="d-flex align-items-center gap-2">
         <span class="text-white small d-none d-md-inline">
           <i class="bi bi-person-circle me-1"></i>
-          <span id="navUserName">Admin</span>
+          <span id="navUserName" style="opacity:0">Admin</span>
         </span>
         <span class="badge bg-danger">🛡️ Admin</span>
+
+        <!-- Botón modo oscuro -->
+        <button
+          class="btn btn-outline-light btn-sm theme-toggle-btn"
+          onclick="window.__toggleTheme()"
+          title="Cambiar a modo oscuro"
+        >
+          <i class="bi bi-moon-fill"></i>
+        </button>
+
         <button id="logoutBtn" class="btn btn-outline-light btn-sm">
           <i class="bi bi-box-arrow-right me-1"></i>Cerrar sesión
         </button>
