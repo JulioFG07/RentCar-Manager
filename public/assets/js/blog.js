@@ -44,7 +44,6 @@ checkAuth(async (user) => {
 });
 
 function renderTips(tips) {
-    const rentTips = tips.filter(t => t.type === 'renta');
     const travelTips = tips.filter(t => t.type === 'viaje');
 
     const renderCard = (tip) => `
@@ -68,10 +67,6 @@ function renderTips(tips) {
           </div>
         </div>
     `;
-
-    document.getElementById('tipsRentaGrid').innerHTML = rentTips.length > 0 
-        ? rentTips.map(renderCard).join('') 
-        : '<div class="col-12 text-center text-muted py-4"><i class="bi bi-inbox fs-2"></i><p class="mt-2">No hay tips de renta registrados.</p></div>';
 
     document.getElementById('tipsViajeGrid').innerHTML = travelTips.length > 0 
         ? travelTips.map(renderCard).join('') 

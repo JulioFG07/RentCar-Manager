@@ -74,6 +74,12 @@ let hasActiveRental    = false;
 let currentPage       = 1;
 const vehiclesPerPage = 6;
 
+// ── Helper: evita desfase UTC al crear fechas desde inputs tipo date ──
+const localDate = (str) => {
+    const [y, m, d] = str.split('-').map(Number);
+    return new Date(y, m - 1, d);
+};
+
 // ── Navbar ──
 document.addEventListener('navbarLoaded', () => {
     const navbarContainer = document.getElementById('navbarContainer')
@@ -166,7 +172,7 @@ const loadVehicles = async () => {
             return;
         }
         allVehicles      = result.data;
-        filteredVehicles = [...allVehicles]; // paginación
+        filteredVehicles = [...allVehicles];
         loadingState.classList.add('d-none');
         if (allVehicles.length === 0) {
             emptyState.classList.remove('d-none');
@@ -400,7 +406,8 @@ async function checkUserActiveRentals() {
     if (!currentCustomerId) return false;
     const result = await getDocuments(COLLECTIONS.RENTALS);
     if (!result.success) return false;
-    const active = result.data.find(r => r.customerId === currentCustomerId && r.status === 'active');
+    // FIX: incluir 'late' para que rentas vencidas no se consideren liberadas
+    const active = result.data.find(r => r.customerId === currentCustomerId && (r.status === 'active' || r.status === 'late'));
     hasActiveRental = !!active;
     return hasActiveRental;
 }
@@ -420,13 +427,13 @@ function openRentalModal(vehicleId, vehicleName, dailyPrice) {
         modalEndDate.value         = '';
         modalTotalCost.textContent = '$0.00';
 
-        // Reset términos (compañero)
+        // Reset términos
         const termsError   = document.getElementById('termsError');
         const termsCheckEl = document.getElementById('termsCheck');
         if (termsError)   termsError.classList.add('d-none');
         if (termsCheckEl) { termsCheckEl.checked = false; termsCheckEl.classList.remove('is-invalid'); }
 
-        // Min date (compañero)
+        // Min date
         const hoy = new Date().toISOString().split('T')[0];
         modalStartDate.min = hoy;
         modalEndDate.min   = hoy;
@@ -440,10 +447,10 @@ function updateTotalCost() {
     const start = modalStartDate.value;
     const end   = modalEndDate.value;
     if (!start) return;
-    modalEndDate.min = start; // compañero: evitar fechas inválidas
+    modalEndDate.min = start;
     if (!end || !currentDailyPrice) { modalTotalCost.textContent = '$0.00'; return; }
-    const startDate = new Date(start);
-    const endDate   = new Date(end);
+    const startDate = localDate(start); // ← FIX: usa hora local
+    const endDate   = localDate(end);   // ← FIX: usa hora local
     if (endDate <= startDate) { modalTotalCost.textContent = 'Fecha inválida'; return; }
     const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
     modalTotalCost.textContent = `$${(days * currentDailyPrice).toFixed(2)}`;
@@ -467,7 +474,7 @@ rentaForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideAlert('rentarAlert');
 
-    // Validar términos (compañero)
+    // Validar términos
     const termsError   = document.getElementById('termsError');
     const termsCheckEl = document.getElementById('termsCheck');
     if (termsCheckEl && !termsCheckEl.checked) {
@@ -490,7 +497,8 @@ rentaForm?.addEventListener('submit', async (e) => {
         showButtonLoader(confirmRentaBtn, 'Guardando...');
         const rentalResult = await createDocument(COLLECTIONS.RENTALS, {
             customerId: currentCustomerId, vehicleId,
-            startDate: new Date(start), endDate: new Date(end),
+            startDate: localDate(start), // ← FIX: usa hora local
+            endDate:   localDate(end),   // ← FIX: usa hora local
             totalCost, status: 'active'
         });
         if (!rentalResult.success) throw new Error('Error al guardar la renta');
@@ -506,13 +514,111 @@ rentaForm?.addEventListener('submit', async (e) => {
     }
 });
 
+// ── Modal de confirmación de liberación (reemplaza confirm() nativo) ──
+function showLiberarModal(isLate, daysLate, dailyPrice, lateFee) {
+    return new Promise((resolve) => {
+        const modalEl    = document.getElementById('liberarModal');
+        const header     = document.getElementById('liberarModalHeader');
+        const title      = document.getElementById('liberarModalTitle');
+        const body       = document.getElementById('liberarModalBody');
+        const confirmBtn = document.getElementById('liberarConfirmBtn');
+        const cancelBtn  = document.getElementById('liberarCancelBtn');
+        const closeBtn   = document.getElementById('liberarModalCloseBtn');
+        const modal      = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+        if (isLate && lateFee > 0) {
+            header.className = 'modal-header border-0 bg-danger text-white rounded-top';
+            closeBtn.className = 'btn-close btn-close-white';
+            title.innerHTML  = '<i class="bi bi-exclamation-triangle-fill me-2"></i>Renta vencida';
+            confirmBtn.className = 'btn btn-danger fw-semibold px-4';
+            body.innerHTML = `
+                <div class="alert alert-danger border-0 mb-3">
+                    <i class="bi bi-clock-history me-2"></i>
+                    Esta renta venció hace <strong>${daysLate} día(s)</strong>.
+                    Se aplicará un cargo adicional por entrega tardía.
+                </div>
+                <div class="bg-light rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Precio por día</span>
+                        <span class="fw-semibold">$${Number(dailyPrice).toFixed(2)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Días de retraso</span>
+                        <span class="fw-semibold">${daysLate} día(s)</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Porcentaje tardío</span>
+                        <span class="fw-semibold">50%</span>
+                    </div>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-danger">Cargo por retraso</span>
+                        <span class="fw-bold text-danger fs-5">$${lateFee.toFixed(2)}</span>
+                    </div>
+                </div>
+                <p class="text-secondary small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Al confirmar se registrará la devolución con el cargo adicional.
+                </p>`;
+        } else {
+            header.className = 'modal-header border-0 bg-primary text-white rounded-top';
+            closeBtn.className = 'btn-close btn-close-white';
+            title.innerHTML  = '<i class="bi bi-car-front me-2"></i>Confirmar devolución';
+            confirmBtn.className = 'btn btn-primary fw-semibold px-4';
+            body.innerHTML = `
+                <p class="text-secondary mb-0">
+                    ¿Estás seguro de que deseas registrar la devolución de este vehículo?
+                    El vehículo quedará disponible para renta nuevamente.
+                </p>`;
+        }
+
+        // Manejar la resolución de la promesa
+        let confirmed = false;
+
+        const onConfirm = () => { confirmed = true; modal.hide(); };
+        const onClose   = () => { modal.hide(); };
+
+        confirmBtn.addEventListener('click', onConfirm, { once: true });
+        cancelBtn.addEventListener('click',  onClose,   { once: true });
+        closeBtn.addEventListener('click',   onClose,   { once: true });
+
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            resolve(confirmed);
+        }, { once: true });
+
+        modal.show();
+    });
+}
+
 // ── Liberar vehículo ──
-async function completeRental(rentalId, vehicleId) {
-    if (!confirm('¿Registrar la devolución del vehículo?')) return;
+async function completeRental(rentalId, vehicleId, dailyPrice = 0, endDateTs = null, isLate = false) {
+    let lateFee  = 0;
+    let daysLate = 0;
+
+    if (isLate && endDateTs && dailyPrice > 0) {
+        const hoy     = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const endDate = endDateTs.toDate ? endDateTs.toDate() : new Date(endDateTs);
+        endDate.setHours(0, 0, 0, 0);
+        daysLate = Math.ceil((hoy - endDate) / (1000 * 60 * 60 * 24));
+        if (daysLate > 0) lateFee = daysLate * dailyPrice * 0.5;
+    }
+
+    const confirmed = await showLiberarModal(isLate, daysLate, dailyPrice, lateFee);
+    if (!confirmed) return;
+
     try {
-        await updateDocument(COLLECTIONS.RENTALS, rentalId, { status: 'completed', returnDate: new Date() });
+        const updateData = { status: 'completed', returnDate: new Date() };
+        if (lateFee > 0) updateData.lateFee = lateFee;
+
+        await updateDocument(COLLECTIONS.RENTALS, rentalId, updateData);
         await updateDocument(COLLECTIONS.VEHICLES, vehicleId, { status: 'available' });
-        showToast('Vehículo liberado correctamente', 'success');
+
+        if (lateFee > 0) {
+            showToast(`Vehículo liberado. Cargo tardío aplicado: $${lateFee.toFixed(2)}`, 'warning');
+        } else {
+            showToast('Vehículo liberado correctamente', 'success');
+        }
         await loadVehicles();
         await loadMyRentals();
     } catch (err) { showToast('Error al liberar el vehículo', 'danger'); console.error(err); }
@@ -584,11 +690,9 @@ reviewForm?.addEventListener('submit', async (e) => {
         showToast('¡Reseña enviada correctamente! ⭐', 'success')
         reviewModal?.hide()
 
-        // Actualizar ratings y re-renderizar tarjetas
         await loadAllRatings()
         renderTable()
 
-        // Actualizar botón en historial
         const btn = document.getElementById(`review-btn-${reviewRentalId.value}`)
         if (btn) {
             btn.outerHTML = `<span class="badge bg-warning text-dark">
@@ -621,20 +725,31 @@ async function loadMyRentals() {
             hasActiveRental = false;
             return;
         }
-        const active  = myRentals.filter(r => r.status === 'active');
+        // FIX: incluir 'late' para que rentas vencidas se sigan mostrando como activas
+        const active  = myRentals.filter(r => r.status === 'active' || r.status === 'late');
         const history = myRentals.filter(r => r.status === 'completed');
         hasActiveRental = active.length > 0;
 
         // Renta activa
         activeRentaBody.innerHTML = '';
         for (const rental of active) {
-            const vehResult = await getDocumentById(COLLECTIONS.VEHICLES, rental.vehicleId);
-            const plate     = vehResult.success ? vehResult.data.plate : 'Desconocido';
-            const vehName   = vehResult.success ? `${vehResult.data.brand} ${vehResult.data.model}` : plate;
-            const start     = rental.startDate.toDate().toLocaleDateString();
-            const end       = rental.endDate.toDate().toLocaleDateString();
-            const row       = activeRentaBody.insertRow();
-            row.insertCell(0).textContent = plate;
+            const vehResult  = await getDocumentById(COLLECTIONS.VEHICLES, rental.vehicleId);
+            const plate      = vehResult.success ? vehResult.data.plate : 'Desconocido';
+            const vehName    = vehResult.success ? `${vehResult.data.brand} ${vehResult.data.model}` : plate;
+            const dailyPrice = vehResult.success ? (vehResult.data.dailyPrice || 0) : 0;
+            const isLate     = rental.status === 'late';
+            const start      = rental.startDate.toDate().toLocaleDateString();
+            const end        = rental.endDate.toDate().toLocaleDateString();
+            const row        = activeRentaBody.insertRow();
+
+            // FIX: mostrar badge de vencida si aplica
+            const plateCell = row.insertCell(0);
+            if (isLate) {
+                plateCell.innerHTML = `${plate} <span class="badge bg-danger ms-1"><i class="bi bi-exclamation-triangle me-1"></i>Vencida</span>`;
+            } else {
+                plateCell.textContent = plate;
+            }
+
             row.insertCell(1).textContent = start;
             row.insertCell(2).textContent = end;
             row.insertCell(3).textContent = `$${rental.totalCost.toFixed(2)}`;
@@ -642,7 +757,8 @@ async function loadMyRentals() {
             const liberarBtn = document.createElement('button');
             liberarBtn.className = 'btn btn-sm btn-danger';
             liberarBtn.innerHTML = '<i class="bi bi-car-front"></i> Liberar';
-            liberarBtn.onclick   = () => completeRental(rental.id, rental.vehicleId);
+            // FIX: pasar datos necesarios para calcular cargo tardío
+            liberarBtn.onclick   = () => completeRental(rental.id, rental.vehicleId, dailyPrice, rental.endDate, isLate);
             btnCell.appendChild(liberarBtn);
         }
 

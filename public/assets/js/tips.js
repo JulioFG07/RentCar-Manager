@@ -146,8 +146,43 @@ window.editTip = (id) => {
     tipModal.show();
 };
 
+// ── Modal de confirmación (reemplaza confirm() nativo) ──
+function showConfirmModal({ title, body, confirmText, confirmClass = 'btn-danger', headerClass = 'bg-danger text-white' }) {
+    return new Promise((resolve) => {
+        const modalEl    = document.getElementById('confirmModal');
+        const header     = document.getElementById('confirmModalHeader');
+        const titleEl    = document.getElementById('confirmModalTitle');
+        const bodyEl     = document.getElementById('confirmModalBody');
+        const confirmBtn = document.getElementById('confirmModalConfirmBtn');
+        const cancelBtn  = document.getElementById('confirmModalCancelBtn');
+        const closeBtn   = document.getElementById('confirmModalCloseBtn');
+        const modal      = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+        header.className       = `modal-header border-0 rounded-top ${headerClass}`;
+        closeBtn.className     = headerClass.includes('text-white') ? 'btn-close btn-close-white' : 'btn-close';
+        titleEl.innerHTML      = title;
+        bodyEl.innerHTML       = body;
+        confirmBtn.className   = `btn fw-semibold px-4 ${confirmClass}`;
+        confirmBtn.textContent = confirmText;
+
+        let confirmed = false;
+        confirmBtn.addEventListener('click', () => { confirmed = true; modal.hide(); }, { once: true });
+        cancelBtn.addEventListener('click',  () => { modal.hide(); }, { once: true });
+        closeBtn.addEventListener('click',   () => { modal.hide(); }, { once: true });
+        modalEl.addEventListener('hidden.bs.modal', () => resolve(confirmed), { once: true });
+        modal.show();
+    });
+}
+
 window.removeTip = async (id) => {
-    if (!confirm('¿Estás seguro de eliminar este artículo permanentemente?')) return;
+    const confirmed = await showConfirmModal({
+        title:        '<i class="bi bi-trash me-2"></i>Eliminar tip',
+        body:         '<p class="text-secondary mb-0">¿Estás seguro de eliminar este artículo permanentemente?</p>',
+        confirmText:  'Eliminar',
+        confirmClass: 'btn-danger',
+        headerClass:  'bg-danger text-white'
+    });
+    if (!confirmed) return;
     try {
         await deleteDocument(TIPS_COLLECTION, id);
         showToast('Artículo eliminado', 'success');

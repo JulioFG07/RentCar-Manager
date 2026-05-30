@@ -102,7 +102,9 @@ const setupProfileForm = (user, profile) => {
     if (viewLicense) viewLicense.textContent = profile.licenseNumber || "—";
     if (viewAddress) viewAddress.textContent = profile.address || "—";
 
+    // Ocultar spinner dentro de la card y mostrar contenido
     if (loadingState) loadingState.classList.add("d-none");
+    document.getElementById('profileContent')?.classList.remove('d-none');
 };
 
 // ── Validación ──
@@ -154,6 +156,17 @@ profileForm?.addEventListener("submit", async (e) => {
 
         showToast("Tu perfil se ha actualizado correctamente.", "success");
 
+        // Alert de éxito temporal dentro de la card
+        const successAlert = document.getElementById("profileAlert")
+        if (successAlert) {
+            successAlert.className = "alert alert-success d-flex align-items-center gap-2"
+            successAlert.innerHTML = `<i class="bi bi-check-circle-fill fs-5"></i><span><strong>¡Guardado exitosamente!</strong> Tu información personal ha sido actualizada.</span>`
+            setTimeout(() => {
+                successAlert.classList.add("d-none")
+                successAlert.className = "alert alert-danger d-none"
+            }, 4000)
+        }
+
         const profileViewMode = document.getElementById("profileViewMode");
         const profileEditMode = document.getElementById("profileEditMode");
         const toggleEditBtn   = document.getElementById("toggleEditBtn");
@@ -168,6 +181,37 @@ profileForm?.addEventListener("submit", async (e) => {
         hideButtonLoader(saveProfileBtn);
     }
 });
+
+/* ======================================================
+   MODAL DE CONFIRMACIÓN (reemplaza confirm() nativo)
+====================================================== */
+
+function showConfirmModal({ title, body, confirmText, confirmClass = 'btn-danger', headerClass = 'bg-danger text-white' }) {
+    return new Promise((resolve) => {
+        const modalEl    = document.getElementById('confirmModal')
+        const header     = document.getElementById('confirmModalHeader')
+        const titleEl    = document.getElementById('confirmModalTitle')
+        const bodyEl     = document.getElementById('confirmModalBody')
+        const confirmBtn = document.getElementById('confirmModalConfirmBtn')
+        const cancelBtn  = document.getElementById('confirmModalCancelBtn')
+        const closeBtn   = document.getElementById('confirmModalCloseBtn')
+        const modal      = bootstrap.Modal.getOrCreateInstance(modalEl)
+
+        header.className       = `modal-header border-0 rounded-top ${headerClass}`
+        closeBtn.className     = headerClass.includes('text-white') ? 'btn-close btn-close-white' : 'btn-close'
+        titleEl.innerHTML      = title
+        bodyEl.innerHTML       = body
+        confirmBtn.className   = `btn fw-semibold px-4 ${confirmClass}`
+        confirmBtn.textContent = confirmText
+
+        let confirmed = false
+        confirmBtn.addEventListener('click', () => { confirmed = true; modal.hide() }, { once: true })
+        cancelBtn.addEventListener('click',  () => { modal.hide() }, { once: true })
+        closeBtn.addEventListener('click',   () => { modal.hide() }, { once: true })
+        modalEl.addEventListener('hidden.bs.modal', () => resolve(confirmed), { once: true })
+        modal.show()
+    })
+}
 
 /* ======================================================
    SECCIÓN DE FAVORITOS
@@ -197,7 +241,7 @@ const loadFavoritesSection = async (profileId) => {
                         <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden;">
                             ${vehicle.imageUrl
                                 ? `<img src="${vehicle.imageUrl}" style="height:120px;object-fit:cover;width:100%" alt="${vehicle.brand}">`
-                                : `<div style="height:120px;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);display:flex;align-items:center;justify-content:center;">
+                                : `<div class="no-vehicle-img" style="height:120px;">
                                        <i class="bi bi-car-front text-secondary" style="font-size:2rem"></i>
                                    </div>`
                             }
@@ -228,7 +272,14 @@ const loadFavoritesSection = async (profileId) => {
 }
 
 window.removeFav = async (favId, vehicleId, vehicleName) => {
-    if (!confirm(`¿Quitar "${vehicleName}" de tus favoritos?`)) return
+    const confirmed = await showConfirmModal({
+        title:        '<i class="bi bi-heart-fill text-danger me-2"></i>Quitar de favoritos',
+        body:         `<p class="text-secondary mb-0">¿Quitar <strong>"${vehicleName}"</strong> de tus favoritos?</p>`,
+        confirmText:  'Quitar',
+        confirmClass: 'btn-danger',
+        headerClass:  'bg-danger text-white'
+    })
+    if (!confirmed) return
     try {
         await removeFavorite(currentProfile.id, vehicleId)
         const card = document.getElementById(`fav-card-${favId}`)
@@ -287,7 +338,6 @@ const loadReviewsSection = async (profileId) => {
         if (list) {
             list.classList.remove('d-none')
 
-            // Ordenar por más reciente
             const sorted = [...result.data].sort((a, b) => {
                 const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0)
                 const db = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0)
@@ -305,7 +355,6 @@ const loadReviewsSection = async (profileId) => {
                     <div class="d-flex gap-2 p-3 rounded-3 mb-3"
                          style="background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.15)">
 
-                        <!-- Imagen del vehículo -->
                         <div class="flex-shrink-0">
                             ${vehicleImg
                                 ? `<img src="${vehicleImg}" style="width:56px;height:44px;object-fit:cover;border-radius:8px" alt="${vehicleName}">`
@@ -315,7 +364,6 @@ const loadReviewsSection = async (profileId) => {
                             }
                         </div>
 
-                        <!-- Info de la reseña -->
                         <div class="flex-grow-1 min-width-0">
                             <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
                                 <h6 class="fw-bold mb-0 small">${vehicleName}</h6>

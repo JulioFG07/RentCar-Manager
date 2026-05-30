@@ -467,21 +467,27 @@ const loadNavbar = async (user) => {
 
     if (!isAdmin) {
         const fixMap = {
-            './dashboard.html':        '../dashboard.html',
-            './modules/rentals.html':  './rentals.html',
-            './modules/reviews.html':  './reviews.html',
-            './profile.html':          '../profile.html',
-            './blog.html':             '../blog.html'
+            './dashboard.html':                  '../dashboard.html',
+            './modules/rentals.html':            './rentals.html',
+            './modules/compare-vehicles.html':   './compare-vehicles.html',
+            './modules/reviews.html':            './reviews.html',
+            './profile.html':                    '../profile.html',
+            './blog.html':                       '../blog.html'
         };
         document.getElementById('navbarContainer').querySelectorAll('a[href]').forEach(a => {
             const fixed = fixMap[a.getAttribute('href')];
             if (fixed) a.setAttribute('href', fixed);
         });
+
+        // Inyectar notificaciones
+        const notifScript = document.createElement('script')
+        notifScript.type = 'module'
+        notifScript.src = '../assets/js/notifications.js'
+        document.head.appendChild(notifScript)
     }
 
     document.dispatchEvent(new Event('navbarLoaded'));
 
-    // Poner nombre con opacity para evitar flash
     const navUserName = document.getElementById('navUserName');
     if (navUserName) {
         navUserName.textContent   = nombre;

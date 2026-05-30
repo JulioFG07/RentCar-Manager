@@ -166,7 +166,6 @@ export async function getFavorites(customerId) {
 /* Agregar favorito */
 export async function addFavorite(customerId, vehicleId) {
     try {
-        // Verificar que no exista ya
         const q = query(
             collection(db, COLLECTIONS.FAVORITES),
             where("customerId", "==", customerId),
@@ -205,7 +204,6 @@ export async function removeFavorite(customerId, vehicleId) {
         const querySnapshot = await getDocsFromServer(q)
         if (querySnapshot.empty) return { success: true }
 
-        // Eliminar todos los documentos que coincidan
         const promises = []
         querySnapshot.forEach((docItem) => {
             promises.push(deleteDoc(doc(db, COLLECTIONS.FAVORITES, docItem.id)))
@@ -309,7 +307,6 @@ export async function getUserReviews(customerId) {
 /* Agregar reseña */
 export async function addReview(data) {
     try {
-        // Verificar que no haya reseñado ya esta renta
         const q = query(
             collection(db, COLLECTIONS.REVIEWS),
             where("rentalId",   "==", data.rentalId),
