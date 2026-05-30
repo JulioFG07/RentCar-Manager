@@ -287,10 +287,46 @@ editForm?.addEventListener('submit', async (e) => {
     }
 })
 
+// ── Modal de confirmación (reemplaza confirm() nativo) ──
+function showConfirmModal({ title, body, confirmText, confirmClass = 'btn-danger', headerClass = 'bg-danger text-white' }) {
+    return new Promise((resolve) => {
+        const modalEl    = document.getElementById('confirmModal')
+        const header     = document.getElementById('confirmModalHeader')
+        const titleEl    = document.getElementById('confirmModalTitle')
+        const bodyEl     = document.getElementById('confirmModalBody')
+        const confirmBtn = document.getElementById('confirmModalConfirmBtn')
+        const cancelBtn  = document.getElementById('confirmModalCancelBtn')
+        const closeBtn   = document.getElementById('confirmModalCloseBtn')
+        const modal      = bootstrap.Modal.getOrCreateInstance(modalEl)
+
+        header.className       = `modal-header border-0 rounded-top ${headerClass}`
+        closeBtn.className     = headerClass.includes('text-white') ? 'btn-close btn-close-white' : 'btn-close'
+        titleEl.innerHTML      = title
+        bodyEl.innerHTML       = body
+        confirmBtn.className   = `btn fw-semibold px-4 ${confirmClass}`
+        confirmBtn.textContent = confirmText
+
+        let confirmed = false
+        confirmBtn.addEventListener('click', () => { confirmed = true; modal.hide() }, { once: true })
+        cancelBtn.addEventListener('click',  () => { modal.hide() }, { once: true })
+        closeBtn.addEventListener('click',   () => { modal.hide() }, { once: true })
+        modalEl.addEventListener('hidden.bs.modal', () => resolve(confirmed), { once: true })
+        modal.show()
+    })
+}
+
 // ── Activar / desactivar ──
 window.toggleCategory = async (id, currentActive) => {
-    const accion = currentActive ? 'desactivar' : 'activar'
-    if (!confirm(`¿Deseas ${accion} esta categoría?`)) return
+    const confirmed = await showConfirmModal({
+        title:        currentActive
+                        ? '<i class="bi bi-pause-circle me-2"></i>Desactivar categoría'
+                        : '<i class="bi bi-play-circle me-2"></i>Activar categoría',
+        body:         `<p class="text-secondary mb-0">¿Deseas ${currentActive ? 'desactivar' : 'activar'} esta categoría?</p>`,
+        confirmText:  currentActive ? 'Desactivar' : 'Activar',
+        confirmClass: currentActive ? 'btn-warning text-dark' : 'btn-success',
+        headerClass:  currentActive ? 'bg-warning text-dark' : 'bg-success text-white'
+    })
+    if (!confirmed) return
     try {
         await updateDocument(COLLECTIONS.VEHICLE_CATEGORIES, id, { active: !currentActive })
         allCategories = allCategories.map(c =>
@@ -305,7 +341,15 @@ window.toggleCategory = async (id, currentActive) => {
 
 // ── Eliminar ──
 window.deleteCategory = async (id, nombre) => {
-    if (!confirm(`¿Eliminar la categoría "${nombre}"?\nLos vehículos asociados quedarán sin categoría.`)) return
+    const confirmed = await showConfirmModal({
+        title:        '<i class="bi bi-trash me-2"></i>Eliminar categoría',
+        body:         `<p class="text-secondary mb-2">¿Eliminar la categoría <strong>"${nombre}"</strong>?</p>
+                       <p class="text-secondary mb-0 small"><i class="bi bi-exclamation-triangle me-1 text-warning"></i>Los vehículos asociados quedarán sin categoría.</p>`,
+        confirmText:  'Eliminar',
+        confirmClass: 'btn-danger',
+        headerClass:  'bg-danger text-white'
+    })
+    if (!confirmed) return
     try {
         const result = await deleteDocument(COLLECTIONS.VEHICLE_CATEGORIES, id)
         if (!result.success) { showToast('No se pudo eliminar', 'danger'); return }
