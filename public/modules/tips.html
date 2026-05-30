@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RentCar Manager | Gestión de Tips</title>
+  <script src="../assets/js/theme-init.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <script src="../assets/js/navbar.js" defer></script>
+</head>
+<body class="dashboard-page">
+  <div id="navbarContainer"></div>
+
+  <main class="py-5 mb-4">
+    <div class="container" style="max-width: 1140px;">
+      <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div>
+          <h2 class="fw-bold mb-1">
+            <i class="bi bi-lightbulb-fill text-primary me-2"></i>Gestión de Tips
+          </h2>
+          <p class="text-secondary mb-0">Administra los tips de renta y de viaje para la plataforma</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tipModal" id="btnNewTip">
+          <i class="bi bi-plus-lg me-1"></i> Nuevo Tip
+        </button>
+      </div>
+
+      <div id="tipsAlert" class="alert alert-danger d-none" role="alert"></div>
+      
+      <div id="loadingState" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="text-secondary mt-3">Cargando base de datos...</p>
+      </div>
+
+      <div id="emptyState" class="d-none text-center py-5">
+        <i class="bi bi-inbox fs-1 text-muted"></i>
+        <p class="text-muted mt-3">No hay tips registrados en el sistema.</p>
+      </div>
+
+      <div id="tipsGrid" class="row g-4 d-none"></div>
+    </div>
+  </main>
+
+  <!-- Modal Formulario -->
+  <div class="modal fade" id="tipModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold" id="modalTitle"><i class="bi bi-pencil-square me-2 text-primary"></i>Formulario de Tip</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body pt-3">
+          <form id="tipForm" novalidate>
+            <input type="hidden" id="tipId">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Clasificación</label>
+                <select class="form-select" id="tipType" required>
+                  <option value="renta">Tip para Rentar</option>
+                  <option value="viaje">Tip de Viaje</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Etiqueta de Sección</label>
+                <input type="text" class="form-control" id="tipTag" placeholder="Ej. Legal, Seguros, Finanzas, Mecánica..." required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Color Temático</label>
+                <select class="form-select" id="tipColor" required>
+                  <option value="primary">Azul (Primary)</option>
+                  <option value="success">Verde (Success)</option>
+                  <option value="danger">Rojo (Danger)</option>
+                  <option value="warning">Amarillo (Warning)</option>
+                  <option value="info">Celeste (Info)</option>
+                  <option value="secondary">Gris (Secondary)</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Ícono (Bootstrap Icons)</label>
+                <input type="text" class="form-control" id="tipIcon" placeholder="Ej. bi-shield-check" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Título del Tip</label>
+                <input type="text" class="form-control" id="tipTitle" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Descripción (Resumen)</label>
+                <textarea class="form-control" id="tipDescription" rows="3" required></textarea>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">URL de Destino</label>
+                <input type="url" class="form-control" id="tipUrl" placeholder="https://..." required>
+              </div>
+            </div>
+            <div class="d-grid mt-4 mb-2">
+              <button type="submit" id="saveTipBtn" class="btn btn-primary btn-lg">Guardar Tip</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="../assets/js/tips.js"></script>
+</body>
+</html>

@@ -1,17 +1,12 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
   <div class="container">
-
     <a class="navbar-brand fw-bold" href="../dashboard.html">
       <i class="bi bi-car-front-fill me-2"></i>RentCar Manager
     </a>
-
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
       <span class="navbar-toggler-icon"></span>
     </button>
-
     <div class="collapse navbar-collapse" id="mainNav">
-
-      <!-- Links de navegación -->
       <ul class="navbar-nav me-auto ms-lg-4 gap-lg-1">
         <li class="nav-item">
           <a class="nav-link" href="./vehicles.html" data-page="vehicles">
@@ -33,30 +28,26 @@
             <i class="bi bi-star me-1"></i>Reseñas
           </a>
         </li>
-      </ul>
 
-      <!-- Usuario, modo oscuro y logout -->
+        <li class="nav-item">
+          <a class="nav-link" href="./tips.html" data-page="tips">
+            <i class="bi bi-lightbulb me-1"></i>Tips
+          </a>
+        </li>
+      </ul>
       <div class="d-flex align-items-center gap-2">
         <span class="text-white small d-none d-md-inline">
           <i class="bi bi-person-circle me-1"></i>
           <span id="navUserName" style="opacity:0">Admin</span>
         </span>
         <span class="badge bg-danger">🛡️ Admin</span>
-
-        <!-- Botón modo oscuro -->
-        <button
-          class="btn btn-outline-light btn-sm theme-toggle-btn"
-          onclick="window.__toggleTheme()"
-          title="Cambiar a modo oscuro"
-        >
+        <button class="btn btn-outline-light btn-sm theme-toggle-btn" onclick="window.__toggleTheme()" title="Cambiar a modo oscuro">
           <i class="bi bi-moon-fill"></i>
         </button>
-
         <button id="logoutBtn" class="btn btn-outline-light btn-sm">
           <i class="bi bi-box-arrow-right me-1"></i>Cerrar sesión
         </button>
       </div>
-
     </div>
   </div>
 </nav>
