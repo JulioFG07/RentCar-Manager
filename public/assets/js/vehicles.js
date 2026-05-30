@@ -511,8 +511,44 @@ editForm?.addEventListener('submit', async (e) => {
    ELIMINAR
 ====================================================== */
 
+// ── Modal de confirmación (reemplaza confirm() nativo) ──
+function showConfirmModal({ title, body, confirmText, confirmClass = 'btn-danger', headerClass = 'bg-danger text-white' }) {
+    return new Promise((resolve) => {
+        const modalEl    = document.getElementById('confirmModal')
+        const header     = document.getElementById('confirmModalHeader')
+        const titleEl    = document.getElementById('confirmModalTitle')
+        const bodyEl     = document.getElementById('confirmModalBody')
+        const confirmBtn = document.getElementById('confirmModalConfirmBtn')
+        const cancelBtn  = document.getElementById('confirmModalCancelBtn')
+        const closeBtn   = document.getElementById('confirmModalCloseBtn')
+        const modal      = bootstrap.Modal.getOrCreateInstance(modalEl)
+
+        header.className       = `modal-header border-0 rounded-top ${headerClass}`
+        closeBtn.className     = headerClass.includes('text-white') ? 'btn-close btn-close-white' : 'btn-close'
+        titleEl.innerHTML      = title
+        bodyEl.innerHTML       = body
+        confirmBtn.className   = `btn fw-semibold px-4 ${confirmClass}`
+        confirmBtn.textContent = confirmText
+
+        let confirmed = false
+        confirmBtn.addEventListener('click', () => { confirmed = true; modal.hide() }, { once: true })
+        cancelBtn.addEventListener('click',  () => { modal.hide() }, { once: true })
+        closeBtn.addEventListener('click',   () => { modal.hide() }, { once: true })
+        modalEl.addEventListener('hidden.bs.modal', () => resolve(confirmed), { once: true })
+        modal.show()
+    })
+}
+
 window.deleteVehicle = async (id, nombre) => {
-    if (!confirm(`¿Eliminar "${nombre}"?\nEsta acción no se puede deshacer.`)) return
+    const confirmed = await showConfirmModal({
+        title:        '<i class="bi bi-trash me-2"></i>Eliminar vehículo',
+        body:         `<p class="text-secondary mb-2">¿Eliminar <strong>"${nombre}"</strong>?</p>
+                       <p class="text-secondary mb-0 small"><i class="bi bi-exclamation-triangle me-1 text-warning"></i>Esta acción no se puede deshacer.</p>`,
+        confirmText:  'Eliminar',
+        confirmClass: 'btn-danger',
+        headerClass:  'bg-danger text-white'
+    })
+    if (!confirmed) return
     try {
         const vehicle = allVehicles.find(v => v.id === id)
         if (vehicle?.imageUrl) await deleteVehicleImage(vehicle.imageUrl)
