@@ -1,17 +1,11 @@
-<!-- navbar-user.html — Navbar exclusivo para el usuario normal -->
-<!-- Se carga dinámicamente desde navbar-user.js -->
-
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
   <div class="container">
-
     <a class="navbar-brand fw-bold" href="./dashboard.html">
       <i class="bi bi-car-front-fill me-2"></i>RentCar Manager
     </a>
-
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarUserNav" aria-controls="navbarUserNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-
     <div class="collapse navbar-collapse" id="navbarUserNav">
       <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
         <li class="nav-item">
@@ -53,28 +47,21 @@
           </ul>
         </li>
       </ul>
-
+      
       <div class="d-flex align-items-center gap-2 ms-auto">
         <a href="./profile.html" class="text-white small d-none d-md-inline text-decoration-none fw-semibold">
           <i class="bi bi-person-circle me-1"></i>
-          <span id="navUserName">Cliente</span>
+          <span id="navUserName">Cargando...</span>
         </a>
-        <span class="badge bg-info text-dark">👤 Cliente</span>
-
-        <!-- Botón modo oscuro -->
-        <button
-          class="btn btn-outline-light btn-sm theme-toggle-btn"
-          onclick="window.__toggleTheme()"
-          title="Cambiar a modo oscuro"
-        >
+        <span class="badge bg-info text-dark">Cliente</span>
+        
+        <button class="btn btn-outline-light btn-sm theme-toggle-btn" onclick="window.__toggleTheme()" title="Cambiar a modo oscuro">
           <i class="bi bi-moon-fill"></i>
         </button>
-
         <button id="logoutBtn" class="btn btn-outline-light btn-sm">
           <i class="bi bi-box-arrow-right me-1"></i> Cerrar sesión
         </button>
       </div>
     </div>
-
   </div>
 </nav>

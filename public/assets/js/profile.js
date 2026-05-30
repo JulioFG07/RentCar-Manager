@@ -78,7 +78,8 @@ checkAuth(async (user) => {
         // Cargar favoritos y reseñas en paralelo
         await Promise.all([
             loadFavoritesSection(profile.id),
-            loadReviewsSection(profile.id)
+            loadReviewsSection(profile.id),
+            loadRentalsHistory(profile.id)
         ]);
 
     } catch (error) {
@@ -389,3 +390,77 @@ const loadReviewsSection = async (profileId) => {
         if (empty)   empty.classList.remove('d-none')
     }
 }
+
+/* ======================================================
+   SECCIÓN DE HISTORIAL DE RENTAS
+====================================================== */
+
+const loadRentalsHistory = async (profileId) => {
+    const section = document.getElementById('rentalsHistorySection');
+    const loading = document.getElementById('rentalsHistoryLoading');
+    const empty   = document.getElementById('rentalsHistoryEmpty');
+    const list    = document.getElementById('rentalsHistoryList');
+    if (!section) return;
+
+    section.classList.remove('d-none');
+
+    try {
+        const rentalsResult = await getDocuments(COLLECTIONS.RENTALS);
+        if (!rentalsResult.success) throw new Error('Error al cargar rentas');
+
+        const myRentals = rentalsResult.data.filter(r => r.customerId === profileId);
+        if (loading) loading.classList.add('d-none');
+
+        if (myRentals.length === 0) {
+            if (empty) empty.classList.remove('d-none');
+            return;
+        }
+
+        // Ordenar por fecha de inicio descendente (más reciente primero)
+        myRentals.sort((a, b) => b.startDate.toDate() - a.startDate.toDate());
+
+        // Usamos allVehicles que ya está cargado globalmente
+        const vehiclesMap = new Map(allVehicles.map(v => [v.id, v]));
+
+        if (list) {
+            list.classList.remove('d-none');
+            list.innerHTML = myRentals.map(rental => {
+                const vehicle = vehiclesMap.get(rental.vehicleId);
+                const vehicleName = vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Vehículo no disponible';
+                const plate = vehicle ? vehicle.plate : '---';
+                const startDate = rental.startDate.toDate().toLocaleDateString();
+                const endDate = rental.endDate.toDate().toLocaleDateString();
+                const totalCost = rental.totalCost?.toFixed(2) || '0.00';
+
+                let statusBadge = '';
+                if (rental.status === 'active') {
+                    statusBadge = '<span class="badge bg-success">🟢 Activa</span>';
+                } else if (rental.status === 'completed') {
+                    statusBadge = '<span class="badge bg-secondary">✅ Completada</span>';
+                } else {
+                    statusBadge = `<span class="badge bg-light text-dark">${rental.status}</span>`;
+                }
+
+                return `
+                    <div class="p-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="fw-bold mb-1">${vehicleName}</h6>
+                                <div class="small text-secondary">Placa: ${plate}</div>
+                                <div class="small text-secondary">📅 ${startDate} → ${endDate}</div>
+                                <div class="small fw-semibold mt-1">💰 $${totalCost}</div>
+                                <div class="mt-1">${statusBadge}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+    } catch (error) {
+        console.error('Error cargando historial de rentas:', error);
+        if (loading) loading.classList.add('d-none');
+        if (empty) empty.classList.remove('d-none');
+        if (empty) empty.innerHTML = '<div class="text-danger text-center py-4">Error al cargar el historial</div>';
+    }
+};

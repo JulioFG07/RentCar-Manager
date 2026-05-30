@@ -1005,12 +1005,4 @@ body.dashboard-page{
 /* =========================================================
    FIX: Floating labels — ocultar placeholder cuando no
    está en foco para evitar que se sobrepongan con el label
-========================================================= */
-.form-floating > .form-control::placeholder {
-    opacity: 0;
-    transition: opacity 0.15s ease;
-}
-
-.form-floating > .form-control:focus::placeholder {
-    opacity: 0.5;
 }
