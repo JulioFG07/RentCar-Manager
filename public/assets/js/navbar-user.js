@@ -41,6 +41,12 @@ const loadUserNavbar = async () => {
         // Marcar el link activo según la página actual
         setActiveUserLink()
 
+        // Cargar notificaciones automáticamente en todas las páginas
+        const notifScript = document.createElement('script')
+        notifScript.type = 'module'
+        notifScript.src = `${basePath}assets/js/notifications.js`
+        document.head.appendChild(notifScript)
+
         // Disparar evento para avisar que el navbar está listo
         document.dispatchEvent(new CustomEvent('navbarLoaded'))
 
