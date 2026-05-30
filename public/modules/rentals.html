@@ -411,9 +411,31 @@
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- MODAL LIBERAR / CARGO TARDÍO                  -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="modal fade" id="liberarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 rounded-top" id="liberarModalHeader">
+          <h5 class="modal-title fw-bold" id="liberarModalTitle"></h5>
+          <button type="button" class="btn-close" id="liberarModalCloseBtn"></button>
+        </div>
+        <div class="modal-body p-4" id="liberarModalBody"></div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" id="liberarCancelBtn">Cancelar</button>
+          <button type="button" class="btn fw-semibold px-4" id="liberarConfirmBtn">
+            <i class="bi bi-check-circle me-1"></i>Confirmar devolución
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="../assets/js/rentals.js"></script>
+  <script type="module" src="../assets/js/keepfilters.js"></script>
 
   <!-- Contador de caracteres del comentario -->
   <script>
