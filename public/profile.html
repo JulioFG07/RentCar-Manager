@@ -14,21 +14,13 @@
 </head>
 <body class="dashboard-page">
 
-  <!-- Estado de carga inicial -->
-  <div id="loadingState" class="text-center py-5 vh-100 d-flex flex-column justify-content-center align-items-center bg-white position-fixed w-100 z-3">
-    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-      <span class="visually-hidden">Cargando...</span>
-    </div>
-    <p class="text-secondary mt-3 fw-medium">Cargando tu perfil...</p>
-  </div>
-
   <!-- NAVBAR -->
   <div id="navbarContainer"></div>
 
   <main class="py-5">
     <div class="container" style="max-width: 1140px;">
 
-      <!-- Encabezado -->
+      <!-- Encabezado siempre visible -->
       <div class="mb-4">
         <h2 class="fw-bold mb-1">
           <i class="bi bi-person-circle text-primary me-2"></i>Mi Perfil
@@ -48,84 +40,98 @@
           <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
 
-              <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                  <h5 class="fw-bold mb-1">
-                    <i class="bi bi-person-gear text-primary me-2"></i>Datos personales
-                  </h5>
-                  <p class="text-secondary small mb-0">Tu información de cuenta y contacto</p>
+              <!-- Spinner mientras carga — igual que rentals/reviews -->
+              <div id="loadingState" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
                 </div>
-                <button id="toggleEditBtn" class="btn btn-outline-primary">
-                  <i class="bi bi-pencil me-2"></i>Editar perfil
-                </button>
+                <p class="text-secondary mt-3 mb-0">Cargando tu perfil...</p>
               </div>
 
-              <!-- Vista de solo lectura -->
-              <div id="profileViewMode">
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <label class="form-label text-secondary small fw-medium">Nombre completo</label>
-                    <p class="fw-semibold mb-0" id="viewName">—</p>
+              <!-- Contenido real, oculto hasta que cargue -->
+              <div id="profileContent" class="d-none">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <div>
+                    <h5 class="fw-bold mb-1">
+                      <i class="bi bi-person-gear text-primary me-2"></i>Datos personales
+                    </h5>
+                    <p class="text-secondary small mb-0">Tu información de cuenta y contacto</p>
                   </div>
-                  <div class="col-md-6">
-                    <label class="form-label text-secondary small fw-medium">Correo electrónico</label>
-                    <p class="fw-semibold mb-0" id="viewEmail">—</p>
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label text-secondary small fw-medium">Teléfono</label>
-                    <p class="fw-semibold mb-0" id="viewPhone">—</p>
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label text-secondary small fw-medium">Número de licencia</label>
-                    <p class="fw-semibold mb-0" id="viewLicense">—</p>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label text-secondary small fw-medium">Dirección</label>
-                    <p class="fw-semibold mb-0" id="viewAddress">—</p>
+                  <button id="toggleEditBtn" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil me-2"></i>Editar perfil
+                  </button>
+                </div>
+
+                <!-- Vista de solo lectura -->
+                <div id="profileViewMode">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label text-secondary small fw-medium">Nombre completo</label>
+                      <p class="fw-semibold mb-0" id="viewName">—</p>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label text-secondary small fw-medium">Correo electrónico</label>
+                      <p class="fw-semibold mb-0" id="viewEmail">—</p>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label text-secondary small fw-medium">Teléfono</label>
+                      <p class="fw-semibold mb-0" id="viewPhone">—</p>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label text-secondary small fw-medium">Número de licencia</label>
+                      <p class="fw-semibold mb-0" id="viewLicense">—</p>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label text-secondary small fw-medium">Dirección</label>
+                      <p class="fw-semibold mb-0" id="viewAddress">—</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Formulario de edición -->
-              <div id="profileEditMode" class="d-none">
-                <form id="profileForm" novalidate>
-                  <div class="mb-3">
-                    <label class="form-label fw-medium">Nombre completo</label>
-                    <input type="text" class="form-control form-control-lg" id="profileName" placeholder="Tu nombre completo">
-                    <div class="invalid-feedback"></div>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label fw-medium">Correo electrónico</label>
-                    <input type="email" class="form-control form-control-lg bg-light" id="profileEmail" readonly>
-                    <div class="form-text">El correo electrónico no se puede modificar.</div>
-                  </div>
-                  <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                      <label class="form-label fw-medium">Teléfono</label>
-                      <input type="text" class="form-control form-control-lg" id="profilePhone" placeholder="10 dígitos">
+                <!-- Formulario de edición -->
+                <div id="profileEditMode" class="d-none">
+                  <form id="profileForm" novalidate>
+                    <div class="mb-3">
+                      <label class="form-label fw-medium">Nombre completo</label>
+                      <input type="text" class="form-control form-control-lg" id="profileName" placeholder="Tu nombre completo">
                       <div class="invalid-feedback"></div>
                     </div>
-                    <div class="col-md-6">
-                      <label class="form-label fw-medium">Número de licencia</label>
-                      <input type="text" class="form-control form-control-lg" id="profileLicense" placeholder="Al menos 6 caracteres">
+                    <div class="mb-3">
+                      <label class="form-label fw-medium">Correo electrónico</label>
+                      <input type="email" class="form-control form-control-lg bg-light" id="profileEmail" readonly>
+                      <div class="form-text">El correo electrónico no se puede modificar.</div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium">Teléfono</label>
+                        <input type="text" class="form-control form-control-lg" id="profilePhone" placeholder="10 dígitos">
+                        <div class="invalid-feedback"></div>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-medium">Número de licencia</label>
+                        <input type="text" class="form-control form-control-lg" id="profileLicense" placeholder="Al menos 6 caracteres">
+                        <div class="invalid-feedback"></div>
+                      </div>
+                    </div>
+                    <div class="mb-4">
+                      <label class="form-label fw-medium">Dirección residencial</label>
+                      <input type="text" class="form-control form-control-lg" id="profileAddress" placeholder="Calle, ciudad, estado">
                       <div class="invalid-feedback"></div>
                     </div>
-                  </div>
-                  <div class="mb-4">
-                    <label class="form-label fw-medium">Dirección residencial</label>
-                    <input type="text" class="form-control form-control-lg" id="profileAddress" placeholder="Calle, ciudad, estado">
-                    <div class="invalid-feedback"></div>
-                  </div>
-                  <div class="d-flex gap-2">
-                    <button type="submit" id="saveProfileBtn" class="btn btn-primary btn-lg fw-semibold flex-grow-1">
-                      <i class="bi bi-check-circle me-2"></i>Guardar cambios
-                    </button>
-                    <button type="button" id="cancelEditBtn" class="btn btn-outline-secondary btn-lg">
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
+                    <div class="d-flex gap-2">
+                      <button type="submit" id="saveProfileBtn" class="btn btn-primary btn-lg fw-semibold flex-grow-1">
+                        <i class="bi bi-check-circle me-2"></i>Guardar cambios
+                      </button>
+                      <button type="button" id="cancelEditBtn" class="btn btn-outline-secondary btn-lg">
+                        Cancelar
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
               </div>
+              <!-- fin #profileContent -->
 
             </div>
           </div>
@@ -155,7 +161,6 @@
                   </a>
                 </div>
 
-                <!-- Grid: 2 cols en móvil, 3 en md, 4 en lg -->
                 <div id="favoritesGrid" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 d-none"></div>
 
               </div>
@@ -180,13 +185,11 @@
                   <p class="text-secondary small mb-0">Reseñas que has dejado en vehículos rentados</p>
                 </div>
 
-                <!-- Loading -->
                 <div id="reviewsLoading" class="text-center py-4">
                   <div class="spinner-border spinner-border-sm text-primary"></div>
                   <p class="text-secondary small mt-2 mb-0">Cargando reseñas...</p>
                 </div>
 
-                <!-- Vacío -->
                 <div id="reviewsEmpty" class="d-none text-center py-4">
                   <i class="bi bi-star text-muted" style="font-size:2.5rem"></i>
                   <p class="text-muted mt-2 mb-0">Aún no has dejado ninguna reseña</p>
@@ -195,7 +198,6 @@
                   </a>
                 </div>
 
-                <!-- Lista de reseñas con scroll si hay muchas -->
                 <div id="reviewsList" class="d-none profile-reviews-list"></div>
 
               </div>
@@ -210,6 +212,25 @@
 
     </div>
   </main>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- MODAL CONFIRMACIÓN GENÉRICO                   -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 rounded-top" id="confirmModalHeader">
+          <h5 class="modal-title fw-bold" id="confirmModalTitle"></h5>
+          <button type="button" class="btn-close" id="confirmModalCloseBtn"></button>
+        </div>
+        <div class="modal-body p-4" id="confirmModalBody"></div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" id="confirmModalCancelBtn">Cancelar</button>
+          <button type="button" class="btn fw-semibold px-4" id="confirmModalConfirmBtn"></button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
