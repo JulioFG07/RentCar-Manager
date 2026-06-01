@@ -63,6 +63,10 @@ rentcar-manager/
 │   │   └── vehicles.html
 │   │
 │   └── assets/
+│       ├── components/
+│       │   └── navbar-user.html
+│       │   └── navbar.html
+│       │
 │       ├── css/
 │       │   └── styles.css
 │       │
